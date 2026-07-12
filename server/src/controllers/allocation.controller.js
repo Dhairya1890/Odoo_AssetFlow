@@ -17,10 +17,17 @@ exports.listAllocations = async (req, res) => {
     if (userId) where.userId = userId;
     if (assetId) where.assetId = assetId;
 
+    // Department heads only see allocations for assets in their department
+    const assetWhere = {};
+    if (req.user.role === 'department_head') {
+      if (!req.user.departmentId) return error(res, 'Your account has no department assigned', 403);
+      assetWhere.departmentId = req.user.departmentId;
+    }
+
     const allocations = await Allocation.findAll({
       where,
       include: [
-        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] },
+        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name', 'departmentId'], where: Object.keys(assetWhere).length ? assetWhere : undefined },
         { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
         { model: User, as: 'allocatedBy', attributes: ['id', 'name'] },
         { model: Department, as: 'department', attributes: ['id', 'name'] },
@@ -164,9 +171,16 @@ exports.raiseTransfer = async (req, res) => {
 
 exports.listTransfers = async (req, res) => {
   try {
+    // Department heads only see transfers for their department's assets
+    const assetWhere = {};
+    if (req.user.role === 'department_head') {
+      if (!req.user.departmentId) return error(res, 'Your account has no department assigned', 403);
+      assetWhere.departmentId = req.user.departmentId;
+    }
+
     const transfers = await TransferRequest.findAll({
       include: [
-        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] },
+        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name', 'departmentId'], where: Object.keys(assetWhere).length ? assetWhere : undefined },
         { model: User, as: 'fromUser', attributes: ['id', 'name', 'email'] },
         { model: User, as: 'toUser', attributes: ['id', 'name', 'email'] },
         { model: User, as: 'requestedBy', attributes: ['id', 'name'] },
@@ -182,9 +196,18 @@ exports.listTransfers = async (req, res) => {
 exports.approveTransfer = async (req, res) => {
   try {
     const { id } = req.params;
-    const transfer = await TransferRequest.findByPk(id);
+    const transfer = await TransferRequest.findByPk(id, {
+      include: [{ model: Asset, as: 'asset', attributes: ['id', 'departmentId'] }],
+    });
     if (!transfer) return error(res, 'Transfer not found', 404);
     if (transfer.status !== 'pending') return error(res, 'Transfer already processed', 400);
+
+    // Dept head can only approve transfers for assets in their department
+    if (req.user.role === 'department_head') {
+      if (!req.user.departmentId || transfer.asset?.departmentId !== req.user.departmentId) {
+        return error(res, 'Forbidden: asset does not belong to your department', 403);
+      }
+    }
 
     await transfer.update({ status: 'approved', approvedById: req.user.id });
 
@@ -243,9 +266,18 @@ exports.allocateTransfer = async (req, res) => {
 exports.rejectTransfer = async (req, res) => {
   try {
     const { id } = req.params;
-    const transfer = await TransferRequest.findByPk(id);
+    const transfer = await TransferRequest.findByPk(id, {
+      include: [{ model: Asset, as: 'asset', attributes: ['id', 'departmentId'] }],
+    });
     if (!transfer) return error(res, 'Transfer not found', 404);
     if (transfer.status !== 'pending') return error(res, 'Transfer already processed', 400);
+
+    // Dept head can only reject transfers for assets in their department
+    if (req.user.role === 'department_head') {
+      if (!req.user.departmentId || transfer.asset?.departmentId !== req.user.departmentId) {
+        return error(res, 'Forbidden: asset does not belong to your department', 403);
+      }
+    }
 
     await transfer.update({ status: 'rejected', approvedById: req.user.id });
 

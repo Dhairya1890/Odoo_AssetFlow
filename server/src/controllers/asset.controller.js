@@ -8,8 +8,16 @@ const path = require('path');
 
 exports.listAssets = async (req, res) => {
   try {
-    const { status, categoryId, departmentId, search } = req.query;
+    const { status, categoryId, search } = req.query;
+    let { departmentId } = req.query;
     const where = {};
+
+    // Department heads are always scoped to their own department
+    if (req.user.role === 'department_head') {
+      if (!req.user.departmentId) return error(res, 'Your account has no department assigned', 403);
+      departmentId = req.user.departmentId;
+    }
+
     if (status) where.status = status;
     if (categoryId) where.categoryId = categoryId;
     if (departmentId) where.departmentId = departmentId;

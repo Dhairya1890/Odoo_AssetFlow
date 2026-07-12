@@ -15,7 +15,7 @@ router.patch('/transfers/:id/allocate', requireRole('asset_manager', 'admin'), c
 // Allocation routes
 router.get('/overdue', requireRole('asset_manager', 'admin'), ctrl.overdueAllocations);
 router.get('/my', ctrl.myAllocations);
-router.get('/', requireRole('asset_manager', 'admin'), ctrl.listAllocations);
+router.get('/', requireRole('asset_manager', 'admin', 'department_head'), ctrl.listAllocations);
 router.post('/', requireRole('asset_manager', 'admin'), ctrl.allocateAsset);
 router.post('/:id/return', ctrl.returnAsset);
 

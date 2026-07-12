@@ -58,10 +58,16 @@ export default function Assets() {
       {/* Page Header */}
       <div className="flex justify-between items-center mb-stack-lg">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Assets</h1>
-          <p className="text-sm text-on-surface-variant mt-1">Manage and track your organization's hardware and infrastructure.</p>
+          <h1 className="text-2xl font-bold text-on-surface">
+            {user?.role === 'department_head' ? 'Department Assets' : 'Assets'}
+          </h1>
+          <p className="text-sm text-on-surface-variant mt-1">
+            {user?.role === 'department_head'
+              ? 'Assets allocated to your department.'
+              : "Manage and track your organization's hardware and infrastructure."}
+          </p>
         </div>
-        {user?.role !== 'employee' && (
+        {['admin', 'asset_manager'].includes(user?.role) && (
           <button 
             onClick={() => { setEditData(null); setIsModalOpen(true); }}
             className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all hover:opacity-90 active:scale-95"
@@ -73,54 +79,57 @@ export default function Assets() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg flex flex-wrap items-center gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Quick Search</label>
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4" />
-            <input 
-              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent" 
-              placeholder="Tag, name, serial..." 
-              type="text" 
-            />
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Quick Search</label>
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4" />
+              <input 
+                className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent" 
+                placeholder="Tag, name, serial..." 
+                type="text" 
+              />
+            </div>
+          </div>
+          <div className="w-48">
+            <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Status</label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
+              <option>All Statuses</option>
+              <option>Available</option>
+              <option>In Use</option>
+              <option>Maintenance</option>
+              <option>Retired</option>
+            </select>
+          </div>
+          <div className="w-48">
+            <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Category</label>
+            <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
+              <option>All Categories</option>
+              <option>Hardware</option>
+              <option>Vehicles</option>
+              <option>Office Furniture</option>
+              <option>Infrastructure</option>
+            </select>
+          </div>
+          {/* Dept filter hidden for dept_head — they're already scoped server-side */}
+          {user?.role !== 'department_head' && (
+            <div className="w-48">
+              <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Department</label>
+              <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
+                <option>All Departments</option>
+                <option>Engineering</option>
+                <option>Operations</option>
+                <option>Marketing</option>
+                <option>Human Resources</option>
+              </select>
+            </div>
+          )}
+          <div className="pt-5">
+            <button className="p-2.5 border border-slate-200 rounded-lg text-on-surface-variant hover:bg-slate-50 transition-all flex items-center justify-center">
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
           </div>
         </div>
-        <div className="w-48">
-          <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Status</label>
-          <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
-            <option>All Statuses</option>
-            <option>Available</option>
-            <option>In Use</option>
-            <option>Maintenance</option>
-            <option>Retired</option>
-          </select>
-        </div>
-        <div className="w-48">
-          <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Category</label>
-          <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
-            <option>All Categories</option>
-            <option>Hardware</option>
-            <option>Vehicles</option>
-            <option>Office Furniture</option>
-            <option>Infrastructure</option>
-          </select>
-        </div>
-        <div className="w-48">
-          <label className="text-xs font-medium text-on-surface-variant mb-1 block px-1">Department</label>
-          <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all bg-transparent cursor-pointer appearance-none">
-            <option>All Departments</option>
-            <option>Engineering</option>
-            <option>Operations</option>
-            <option>Marketing</option>
-            <option>Human Resources</option>
-          </select>
-        </div>
-        <div className="pt-5">
-          <button className="p-2.5 border border-slate-200 rounded-lg text-on-surface-variant hover:bg-slate-50 transition-all flex items-center justify-center">
-            <SlidersHorizontal className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
       {/* Data Table */}
       <div className="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
@@ -134,13 +143,13 @@ export default function Assets() {
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Status</th>
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Location</th>
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Condition</th>
-                {user?.role !== 'employee' && <th className="p-4 text-sm font-medium text-on-surface-variant text-right">Actions</th>}
+                {['admin', 'asset_manager'].includes(user?.role) && <th className="p-4 text-sm font-medium text-on-surface-variant text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {assets.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan={user?.role === 'employee' ? 6 : 7} className="p-8 text-center text-on-surface-variant text-sm">
+                  <td colSpan={['admin', 'asset_manager'].includes(user?.role) ? 7 : 6} className="p-8 text-center text-on-surface-variant text-sm">
                     No assets found.
                   </td>
                 </tr>
@@ -174,7 +183,7 @@ export default function Assets() {
                         {asset.condition.toLowerCase()}
                       </span>
                     </td>
-                    {user?.role !== 'employee' && (
+                    {['admin', 'asset_manager'].includes(user?.role) && (
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => handleEdit(asset)} className="p-1.5 text-on-surface-variant hover:text-primary bg-slate-100 hover:bg-primary/10 rounded transition-colors">

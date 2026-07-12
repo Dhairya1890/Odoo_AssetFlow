@@ -54,15 +54,21 @@ export default function Allocations() {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-2xl font-bold text-on-surface">Asset Allocations</h2>
-          <p className="text-sm text-on-surface-variant mt-1">Manage organization-wide asset assignments and track transfer requests.</p>
+          <p className="text-sm text-on-surface-variant mt-1">
+            {user?.role === 'department_head'
+              ? 'View and approve asset transfers within your department.'
+              : 'Manage organization-wide asset assignments and track transfer requests.'}
+          </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-5 h-5" />
-          Allocate Asset
-        </button>
+        {['admin', 'asset_manager'].includes(user?.role) && (
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-5 h-5" />
+            Allocate Asset
+          </button>
+        )}
       </div>
 
       {/* Tab Navigation */}
