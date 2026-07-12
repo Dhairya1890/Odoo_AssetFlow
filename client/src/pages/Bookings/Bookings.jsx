@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Calendar as CalendarIcon, Clock, X, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import apiClient from '../../api/client';
@@ -14,6 +14,7 @@ export default function Bookings() {
   const [deleteId, setDeleteId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [assetSearch, setAssetSearch] = useState('');
   
   const [formData, setFormData] = useState({
     assetId: '',
@@ -111,6 +112,17 @@ export default function Bookings() {
     }
   };
 
+  const filteredBookableAssets = useMemo(() => {
+    const q = assetSearch.toLowerCase();
+    if (!q) return bookableAssets;
+    return bookableAssets.filter(a =>
+      a.name?.toLowerCase().includes(q) ||
+      a.department?.name?.toLowerCase().includes(q) ||
+      a.category?.name?.toLowerCase().includes(q) ||
+      a.assetTag?.toLowerCase().includes(q)
+    );
+  }, [bookableAssets, assetSearch]);
+
   // Calculations for UI
   const myBookings = bookings.filter(b => b.userId === user?.id);
   const myUpcoming = myBookings.filter(b => b.status === 'pending' || b.status === 'approved' || b.status === 'APPROVED');
@@ -151,15 +163,19 @@ export default function Bookings() {
               <input 
                 className="w-full pl-9 pr-3 py-2 bg-surface-container-low border-0 border-b border-outline-variant focus:ring-0 focus:border-primary text-sm transition-colors" 
                 placeholder="Filter assets..." 
-                type="text" 
+                type="text"
+                value={assetSearch}
+                onChange={e => setAssetSearch(e.target.value)}
               />
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4" />
             </div>
             
             <div className="flex flex-col gap-1 max-h-[400px] overflow-y-auto custom-scrollbar">
-              {bookableAssets.length === 0 ? (
-                <p className="text-xs text-on-surface-variant p-2">No bookable resources found.</p>
-              ) : bookableAssets.map(asset => (
+              {filteredBookableAssets.length === 0 ? (
+                <p className="text-xs text-on-surface-variant p-2">
+                  {bookableAssets.length === 0 ? 'No bookable resources found.' : 'No resources match your search.'}
+                </p>
+              ) : filteredBookableAssets.map(asset => (
                 <div 
                   key={asset.id}
                   className="p-3 rounded-lg hover:bg-surface-container-high flex flex-col gap-1 cursor-pointer border border-transparent hover:border-outline-variant transition-all"

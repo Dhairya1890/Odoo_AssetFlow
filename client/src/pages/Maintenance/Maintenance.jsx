@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Download, MoreVertical, X, UploadCloud, CheckCircle } from 'lucide-react';
 import apiClient from '../../api/client';
@@ -17,6 +17,10 @@ export default function Maintenance() {
     issueDescription: ''
   });
   const [photoFile, setPhotoFile] = useState(null);
+  // Filters
+  const [search, setSearch] = useState('');
+  const [filterPriority, setFilterPriority] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -98,6 +102,23 @@ export default function Maintenance() {
     }
   };
 
+  const filteredTasks = useMemo(() => {
+    const q = search.toLowerCase();
+    return tasks.filter(t => {
+      const matchSearch = !q ||
+        t.Asset?.assetTag?.toLowerCase().includes(q) ||
+        t.Asset?.name?.toLowerCase().includes(q) ||
+        t.issueDescription?.toLowerCase().includes(q) ||
+        t.ReportedBy?.name?.toLowerCase().includes(q) ||
+        t.raisedBy?.name?.toLowerCase().includes(q);
+      const matchPriority = filterPriority === 'all' ||
+        t.priority?.toLowerCase() === filterPriority.toLowerCase();
+      const matchStatus = filterStatus === 'all' ||
+        t.status?.toLowerCase() === filterStatus.toLowerCase();
+      return matchSearch && matchPriority && matchStatus;
+    });
+  }, [tasks, search, filterPriority, filterStatus]);
+
   return (
     <div className="p-container-padding space-y-stack-lg">
       {/* Page Header */}
@@ -176,31 +197,57 @@ export default function Maintenance() {
       {/* Filters and Table View */}
       <section className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-outline-variant flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h3 className="text-sm font-medium text-on-surface">All Tickets</h3>
-            <div className="h-4 w-[1px] bg-outline-variant mx-1"></div>
-            <div className="flex gap-2">
-              <select className="text-xs border border-outline-variant rounded-lg bg-surface px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                <option>All Priorities</option>
-                <option>High</option>
-                <option>Medium</option>
-                <option>Low</option>
-              </select>
-              <select className="text-xs border border-outline-variant rounded-lg bg-surface px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                <option>All Assets</option>
-                <option>HVAC</option>
-                <option>IT Hardware</option>
-                <option>Furniture</option>
-              </select>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-sm font-medium text-on-surface">
+              All Tickets
+              <span className="ml-2 text-xs text-on-surface-variant font-normal">
+                ({filteredTasks.length}{filteredTasks.length !== tasks.length ? ` of ${tasks.length}` : ''})
+              </span>
+            </h3>
+            <div className="h-4 w-[1px] bg-outline-variant mx-1" />
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-on-surface-variant" />
+              <input
+                id="maintenance-search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search asset, issue, user…"
+                className="pl-8 pr-3 py-1.5 text-xs border border-outline-variant rounded-lg bg-surface focus:outline-none focus:border-primary"
+              />
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors">
-              <Filter className="w-4 h-4 text-on-surface-variant" />
-            </button>
-            <button className="p-1.5 border border-outline-variant rounded-lg hover:bg-surface-container-high transition-colors">
-              <Download className="w-4 h-4 text-on-surface-variant" />
-            </button>
+            <select
+              id="maintenance-filter-priority"
+              value={filterPriority}
+              onChange={e => setFilterPriority(e.target.value)}
+              className="text-xs border border-outline-variant rounded-lg bg-surface px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select
+              id="maintenance-filter-status"
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
+              className="text-xs border border-outline-variant rounded-lg bg-surface px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            {(search || filterPriority !== 'all' || filterStatus !== 'all') && (
+              <button
+                onClick={() => { setSearch(''); setFilterPriority('all'); setFilterStatus('all'); }}
+                className="flex items-center gap-1 text-xs text-on-surface-variant hover:text-primary border border-outline-variant rounded-lg px-2 py-1.5 transition-colors"
+              >
+                <X className="w-3 h-3" /> Clear
+              </button>
+            )}
           </div>
         </div>
         
@@ -217,14 +264,14 @@ export default function Maintenance() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {tasks.length === 0 && !loading ? (
+              {filteredTasks.length === 0 && !loading ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-on-surface-variant text-sm">
-                    No maintenance tickets found.
+                    {tasks.length === 0 ? 'No maintenance tickets found.' : 'No tickets match your filters.'}
                   </td>
                 </tr>
               ) : (
-                tasks.map((task) => (
+                filteredTasks.map((task) => (
                   <tr key={task.id} className="hover:bg-surface-container-low transition-colors group">
                     <td className="px-4 py-4 text-sm font-bold">{task.Asset?.assetTag || 'Unknown'}</td>
                     <td className="px-4 py-4 text-sm max-w-xs truncate">{task.issueDescription}</td>

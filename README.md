@@ -1,141 +1,323 @@
-# 🚀 AssetFlow
+# AssetFlow
 
-AssetFlow is a comprehensive, enterprise-grade Asset Management System that streamlines the entire lifecycle of corporate assets—from onboarding and allocation to maintenance, audits, and retirement. Built with a modern tech stack (React + Node.js + PostgreSQL), AssetFlow offers powerful role-based access controls, automated background jobs, real-time notifications, and rich analytics.
-
----
-
-## ✨ Key Features
-
-### 🏢 Organization & User Management
-- **Hierarchical Structure**: Organize your company into distinct departments and sub-departments.
-- **Role-Based Access Control (RBAC)**: Fine-grained permissions featuring four distinct roles:
-  - **Admin**: Unrestricted access to all modules, settings, and users.
-  - **Asset Manager**: Full control over assets, allocations, maintenance, and audits, with restricted access to organizational setup (e.g., cannot edit Employees or Departments).
-  - **Department Head**: Can view and manage assets and allocations specific to their department.
-  - **Employee**: Can view their own assigned assets, book new assets, and raise maintenance requests.
-- **Employee Directory**: Seamlessly manage staff, assign roles, and handle account statuses.
-
-### 💻 Asset Lifecycle & Registry
-- **Asset Onboarding**: Create and categorize assets, generate unique Asset Tags, and assign them to departments.
-- **Dynamic Status Tracking**: Assets automatically transition between statuses (`available`, `allocated`, `maintenance`, `lost`, `retired`) based on real-time activity.
-- **Asset Categories**: Group assets logically (e.g., Laptops, Software, Furniture).
-
-### 🔄 Allocations, Bookings & Transfers
-- **Direct Allocations**: Asset Managers/Admins can instantly assign available assets to users with an Expected Return Date.
-- **Employee Bookings**: Employees can request/book assets for a specific time period.
-- **Transfer Pipelines**: Approved bookings seamlessly convert into active Allocations or Transfer Requests.
-- **Return Management**: Returning an asset gracefully updates its condition and frees it up in the registry.
-
-### 🛠️ Maintenance & Servicing
-- **Issue Reporting**: Employees can quickly report faulty assets.
-- **Workflow Pipeline**: Track maintenance requests from `pending` -> `approved` -> `in_progress` -> `completed`.
-- **Automated Locking**: Assets under maintenance are locked out of the allocation pool to prevent double-booking.
-
-### 📋 Audits & Compliance
-- **Audit Cycles**: Schedule and run audits on specific departments or locations.
-- **Auditor Assignments**: Assign dedicated staff to verify physical assets.
-- **Automated Remediation**: Closing an audit automatically flags `missing` assets and transitions their status to `lost` system-wide.
-
-### 🔔 Automation & Real-Time Intelligence
-- **Cron Jobs**:
-  - **Overdue Checker**: Runs daily at midnight to flag active allocations past their expected return date.
-  - **Booking Reminders**: Checks every 15 minutes to notify users of approved bookings starting in 1 hour.
-- **Real-Time Notifications**: WebSocket (Socket.io) integration for instant alerts (e.g., "Transfer Request Approved", "Asset Overdue").
-- **Activity Logging**: Full audit trails of every critical action taken in the system.
-
-### 📊 Dashboards & Reporting
-- **Interactive Dashboards**: Role-tailored dashboards displaying relevant KPIs (Active Bookings, Overdue Returns, Maintenance counts).
-- **Rich Analytics**: Visual data representations using Recharts (Pie charts, Bar charts, Area charts).
-- **One-Click Exports**: Instantly export Utilization and Department Summary reports to Excel/CSV.
+> **Enterprise Asset Management System** — A full-stack web application for managing organizational assets, allocations, bookings, maintenance, and audit cycles across department hierarchies.
 
 ---
 
-## 🛠️ Tech Stack
+## Table of Contents
 
-### Frontend (Client)
-- **Framework**: React 18 (Vite)
-- **Styling**: Tailwind CSS, PostCSS
-- **State Management**: Zustand (Global), React Query (Data Fetching)
-- **Routing**: React Router DOM
-- **Forms & Validation**: React Hook Form, Zod
-- **Icons**: Lucide React
-- **Charts**: Recharts
-- **Real-time**: Socket.io-client
-- **Date Handling**: Date-fns, Moment
-
-### Backend (Server)
-- **Environment**: Node.js & Express.js
-- **Database**: PostgreSQL
-- **ORM**: Sequelize
-- **Authentication**: JWT (JSON Web Tokens), bcryptjs
-- **Validation**: Express-validator
-- **Real-time**: Socket.io
-- **Background Jobs**: Node-cron
-- **File Uploads/Exports**: Multer, ExcelJS, json2csv
-- **Security**: Helmet, CORS
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Database Setup](#database-setup)
+  - [Server Setup](#server-setup)
+  - [Client Setup](#client-setup)
+  - [Running the App](#running-the-app)
+- [Environment Variables](#environment-variables)
+- [API Reference](#api-reference)
+- [Role-Based Access Control](#role-based-access-control)
+- [Seeded Demo Accounts](#seeded-demo-accounts)
 
 ---
 
-## 🚦 Getting Started
+## Overview
+
+AssetFlow is a production-ready ERP module for asset lifecycle management. It provides structured workflows for registering assets, allocating them to users or departments, managing bookings for shared resources, tracking maintenance requests, and running structured audit cycles — all under a role-based access control system.
+
+---
+
+## Features
+
+### 🗂️ Asset Management
+- Register assets with tag auto-generation, photos, documents, and QR codes
+- Full lifecycle tracking: available → allocated → under maintenance → retired/disposed/lost
+- Per-asset history modal showing all allocation and maintenance records
+- Live search and filtering by status, category, and keyword
+
+### 📦 Allocation & Transfers
+- Allocate assets to users with expected return dates
+- Transfer request workflow: raise → approve/reject → allocate
+- Overdue detection with automated status escalation
+- Department-scoped views for Department Heads
+
+### 📅 Bookings
+- Book shared/bookable resources on a weekly calendar grid
+- Booking quota tracking per user
+- Reschedule and cancel support
+
+### 🔧 Maintenance Pipeline
+- Raise maintenance requests with photo evidence
+- Priority levels: Low / Medium / High / Critical
+- Status pipeline: Pending → Approved → In Progress → Resolved
+- Filter by priority, status, and keyword
+
+### 🔍 Audit Management
+- Create structured audit cycles scoped to department or location
+- Assign multiple auditors per cycle
+- Auditors mark each asset: Verified / Missing / Damaged with inline notes
+- Auto-generated discrepancy report with summary cards and flagged item tables
+- Close Cycle action: locks the cycle and marks confirmed-missing assets as `Lost`
+- Exportable audit reports as CSV
+- Full audit history retained per cycle
+
+### 📊 Reports & Dashboard
+- KPI dashboard: Available, Allocated, Maintenance, Bookings, Transfers, Overdue counts
+- Recent activity feed with timeline
+- Excel/CSV export for asset and allocation reports
+
+### 🔔 Notifications
+- In-app notification system for asset assignments, transfers, and booking events
+- Real-time updates via Socket.IO
+
+### ⚙️ Org Setup (Admin)
+- Manage users, departments, asset categories
+- Update user roles and reset passwords
+- Department hierarchy support (parent/child)
+
+---
+
+## Tech Stack
+
+### Backend
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js |
+| Framework | Express 5 |
+| Database | PostgreSQL |
+| ORM | Sequelize 6 |
+| Auth | JWT (access + refresh token) |
+| File uploads | Multer |
+| QR Codes | `qrcode` |
+| Real-time | Socket.IO |
+| Scheduled Jobs | node-cron |
+| Reports | ExcelJS, json2csv |
+| Security | Helmet, bcryptjs |
+
+### Frontend
+| Layer | Technology |
+|---|---|
+| Framework | React 19 |
+| Build Tool | Vite 8 |
+| Routing | React Router v7 |
+| State | Zustand |
+| Data Fetching | Axios + TanStack Query |
+| Styling | Tailwind CSS v4 (Vanilla CSS design tokens) |
+| UI Icons | Lucide React |
+| Charts | Recharts |
+| Calendar | react-big-calendar |
+| Forms | React Hook Form + Zod |
+| Toasts | react-hot-toast |
+
+---
+
+## Project Structure
+
+```
+AssetFlow/
+├── client/                    # React frontend (Vite)
+│   └── src/
+│       ├── api/               # Axios client
+│       ├── components/        # Shared components (layout, assets, modals)
+│       ├── pages/             # Page components
+│       │   ├── Auth/          # Login / Signup
+│       │   ├── Dashboard/
+│       │   ├── Assets/        # Asset list + per-asset history
+│       │   ├── Allocations/   # Allocations + transfer requests
+│       │   ├── Bookings/      # Calendar booking view
+│       │   ├── Maintenance/   # Maintenance pipeline
+│       │   ├── Audits/        # Audit cycles (list, detail, checklist, report)
+│       │   ├── Reports/
+│       │   ├── Settings/
+│       │   └── OrgSetup/      # Admin: users, departments, categories
+│       └── store/             # Zustand stores (auth, notifications)
+│
+└── server/                    # Express backend
+    ├── src/
+    │   ├── config/            # Sequelize DB config
+    │   ├── controllers/       # Business logic
+    │   ├── middleware/        # Auth, role guard, upload
+    │   ├── models/            # Sequelize models
+    │   ├── routes/            # Express routers
+    │   ├── services/          # Notification, allocation, activity logger
+    │   ├── jobs/              # Cron jobs (overdue detection)
+    │   └── utils/             # Response helpers
+    ├── migrations/            # Sequelize migrations
+    └── seeders/               # Seed data
+```
+
+---
+
+## Getting Started
 
 ### Prerequisites
-- Node.js (v16+)
-- PostgreSQL (v12+)
 
-### 1. Database Setup
-Ensure PostgreSQL is running and create a database named `assetflow_db`:
-```sql
-CREATE DATABASE assetflow_db;
+- **Node.js** v18+
+- **PostgreSQL** v14+ (running locally or via Docker)
+- **npm** v9+
+
+---
+
+### Database Setup
+
+```bash
+# Create the database and user (run in psql)
+CREATE USER assetflow WITH PASSWORD 'AssetFlow@123';
+CREATE DATABASE assetflow OWNER assetflow;
+GRANT ALL PRIVILEGES ON DATABASE assetflow TO assetflow;
 ```
 
-### 2. Backend Setup
-Navigate to the `server` directory, install dependencies, and configure your environment:
+---
+
+### Server Setup
+
 ```bash
 cd server
+
+# Install dependencies
 npm install
-```
-Create a `.env` file in the `server` directory and add the following:
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=your_postgres_username
-DB_PASS=your_postgres_password
-DB_NAME=assetflow_db
-JWT_SECRET=your_super_secret_jwt_key
-CLIENT_URL=http://localhost:5173
-```
-Run Database Migrations and Start the Server:
-```bash
-npx sequelize-cli db:migrate
-npm run dev
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your DB credentials and JWT secrets
+
+# Run database migrations
+npm run db:migrate
+
+# Seed demo data (users, departments, assets)
+npm run db:seed
 ```
 
-### 3. Frontend Setup
-Navigate to the `client` directory, install dependencies, and start the Vite development server:
+---
+
+### Client Setup
+
 ```bash
 cd client
+
+# Install dependencies
 npm install
-npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`.
+---
+
+### Running the App
+
+Open two terminals:
+
+**Terminal 1 — Backend**
+```bash
+cd server
+npm run dev
+# Runs on http://localhost:5000
+```
+
+**Terminal 2 — Frontend**
+```bash
+cd client
+npm run dev
+# Runs on http://localhost:5173
+```
+
+**Reset database (wipe + re-migrate + re-seed):**
+```bash
+cd server
+npm run db:reset
+```
 
 ---
 
-## 🔐 Default Admin Credentials
-When you run the system, an initial super-admin is usually required. If not created via a seeder, register via the UI, or insert an admin user directly into the database.
+## Environment Variables
+
+Create a `.env` file in the `server/` directory:
+
+```env
+# Server
+PORT=5000
+NODE_ENV=development
+
+# Database (PostgreSQL)
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_NAME=assetflow
+DB_USER=assetflow
+DB_PASSWORD=AssetFlow@123
+
+# JWT
+JWT_SECRET=your_super_secret_jwt_key
+JWT_REFRESH_SECRET=your_super_secret_refresh_key
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Client (for CORS and reset links)
+CLIENT_URL=http://localhost:5173
+
+# File uploads
+UPLOAD_DIR=uploads
+
+# Email (optional — for forgot password)
+# SMTP_HOST=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USER=you@gmail.com
+# SMTP_PASS=your_app_password
+```
 
 ---
 
-## 🏗️ Project Structure Highlights
-- `/client/src/components/` - Reusable UI elements, Layouts, and specific Module Modals.
-- `/client/src/pages/` - Core views (Dashboard, OrgSetup, Assets, Allocations, Audits, etc).
-- `/client/src/store/` - Zustand stores for state management (authStore).
-- `/server/src/controllers/` - Core business logic for handling API requests.
-- `/server/src/models/` - Sequelize database schemas and table relationships.
-- `/server/src/jobs/` - Node-cron automated background tasks.
-- `/server/src/routes/` - Express API routing definitions.
+## API Reference
+
+All endpoints are prefixed with `/api`.
+
+| Resource | Base Path | Notes |
+|---|---|---|
+| Auth | `/api/auth` | login, signup, refresh, logout, forgot-password |
+| Users | `/api/users` | CRUD, role/status/password management |
+| Departments | `/api/departments` | CRUD with hierarchy |
+| Categories | `/api/categories` | Asset categories |
+| Assets | `/api/assets` | CRUD, QR code, status update |
+| Allocations | `/api/allocations` | Allocate, return, overdue, transfers |
+| Bookings | `/api/bookings` | Create, cancel, reschedule |
+| Maintenance | `/api/maintenance` | Raise, update, status pipeline |
+| Audits | `/api/audits` | Cycles, items, report, close |
+| Reports | `/api/reports` | Asset & allocation export (Excel/CSV) |
+| Dashboard | `/api/dashboard` | KPI aggregates |
+| Notifications | `/api/notifications` | List, mark read |
+| Activity Log | `/api/activities` | System-wide audit trail |
 
 ---
 
-Made with ❤️ for efficient Enterprise Asset Management.
+## Role-Based Access Control
+
+| Permission | Admin | Asset Manager | Dept Head | Employee |
+|---|:---:|:---:|:---:|:---:|
+| Register / Edit / Delete assets | ✅ | ✅ | ❌ | ❌ |
+| View all assets | ✅ | ✅ | Dept only | ✅ |
+| View per-asset history | ✅ | ✅ | ✅ | ❌ |
+| Create / manage allocations | ✅ | ✅ | ❌ | ❌ |
+| View allocations | ✅ | ✅ | Dept only | Own only |
+| Approve / reject transfers | ✅ | ✅ | Dept only | ❌ |
+| Execute transfer (allocate) | ✅ | ✅ | ❌ | ❌ |
+| Book shared resources | ✅ | ✅ | ✅ | ✅ |
+| Raise maintenance request | ✅ | ✅ | ✅ | ✅ |
+| Manage maintenance pipeline | ✅ | ✅ | ❌ | ❌ |
+| Create / close audit cycles | ✅ | ❌ | ❌ | ❌ |
+| Mark audit items | ✅ | ✅ | ✅ | ❌ |
+| View reports | ✅ | ✅ | ❌ | ❌ |
+| Org setup (users, depts) | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## Seeded Demo Accounts
+
+After running `npm run db:seed`, the following accounts are available:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@assetflow.com` | `AssetFlow@123` |
+| Asset Manager | `manager@assetflow.com` | `AssetFlow@123` |
+| Department Head | `head@assetflow.com` | `AssetFlow@123` |
+| Employee | `employee@assetflow.com` | `AssetFlow@123` |
+
+> New users created by admins are assigned the default password `AssetFlow@123` and should change it on first login.

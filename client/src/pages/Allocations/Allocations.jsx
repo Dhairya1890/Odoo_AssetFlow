@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Check, X, TrendingUp, AlertCircle, Box } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Check, X, TrendingUp, AlertCircle, Box, Search } from 'lucide-react';
 import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
@@ -11,6 +11,8 @@ export default function Allocations() {
   const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const fetchData = async () => {
     try {
@@ -42,7 +44,33 @@ export default function Allocations() {
     }
   };
 
-  const activeAllocations = allocations.filter(a => a.status === 'active' || a.status === 'overdue');
+  const activeAllocations = useMemo(() => {
+    const base = allocations.filter(a => a.status === 'active' || a.status === 'overdue');
+    const q = search.toLowerCase();
+    return base.filter(a => {
+      const matchSearch = !q ||
+        a.asset?.assetTag?.toLowerCase().includes(q) ||
+        a.asset?.name?.toLowerCase().includes(q) ||
+        a.user?.name?.toLowerCase().includes(q) ||
+        a.user?.email?.toLowerCase().includes(q);
+      const matchStatus = filterStatus === 'all' || a.status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [allocations, search, filterStatus]);
+
+  const filteredTransfers = useMemo(() => {
+    const q = search.toLowerCase();
+    return transfers.filter(t => {
+      const matchSearch = !q ||
+        t.asset?.name?.toLowerCase().includes(q) ||
+        t.asset?.assetTag?.toLowerCase().includes(q) ||
+        t.fromUser?.name?.toLowerCase().includes(q) ||
+        t.toUser?.name?.toLowerCase().includes(q);
+      const matchStatus = filterStatus === 'all' || t.status === filterStatus;
+      return matchSearch && matchStatus;
+    });
+  }, [transfers, search, filterStatus]);
+
   const overdueAllocations = allocations.filter(a => a.status === 'overdue').length;
   const healthPercentage = allocations.length === 0 ? 100 : Math.round(((allocations.length - overdueAllocations) / allocations.length) * 100);
   
@@ -51,7 +79,7 @@ export default function Allocations() {
   return (
     <div className="p-container-padding">
       {/* Page Header */}
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold text-on-surface">Asset Allocations</h2>
           <p className="text-sm text-on-surface-variant mt-1">
@@ -61,12 +89,61 @@ export default function Allocations() {
           </p>
         </div>
         {['admin', 'asset_manager'].includes(user?.role) && (
-          <button 
+          <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+            className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0"
           >
             <Plus className="w-5 h-5" />
             Allocate Asset
+          </button>
+        )}
+      </div>
+
+      {/* Search + Filter Bar */}
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-3 mb-5 flex flex-wrap gap-3 items-end">
+        <div className="flex-1 min-w-[180px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant w-4 h-4" />
+            <input
+              id="alloc-search"
+              value={search}
+              onChange={e => { setSearch(e.target.value); }}
+              placeholder="Search asset, user…"
+              className="w-full pl-9 pr-4 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-primary bg-transparent"
+            />
+          </div>
+        </div>
+        <div>
+          <select
+            id="alloc-filter-status"
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-primary bg-transparent cursor-pointer appearance-none"
+          >
+            {activeTab === 'active' ? (
+              <>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="overdue">Overdue</option>
+              </>
+            ) : (
+              <>
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="allocated">Allocated</option>
+                <option value="rejected">Rejected</option>
+              </>
+            )}
+          </select>
+        </div>
+        {(search || filterStatus !== 'all') && (
+          <button
+            onClick={() => { setSearch(''); setFilterStatus('all'); }}
+            className="flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-primary px-3 py-2 border border-outline-variant rounded-lg transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Clear
           </button>
         )}
       </div>
@@ -112,7 +189,9 @@ export default function Allocations() {
               {activeAllocations.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-8 text-center text-on-surface-variant text-sm">
-                    No active allocations found.
+                    {allocations.filter(a => a.status === 'active' || a.status === 'overdue').length === 0
+                      ? 'No active allocations found.'
+                      : 'No allocations match your filters.'}
                   </td>
                 </tr>
               ) : (
@@ -146,14 +225,14 @@ export default function Allocations() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {transfers.length === 0 ? (
+              {filteredTransfers.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="p-8 text-center text-on-surface-variant text-sm">
-                    No transfer requests found.
+                    {transfers.length === 0 ? 'No transfer requests found.' : 'No transfers match your filters.'}
                   </td>
                 </tr>
               ) : (
-                transfers.map((transfer) => (
+                filteredTransfers.map((transfer) => (
                   <tr key={transfer.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium">{transfer.asset?.name || 'Unknown'}</td>
                     <td className="px-6 py-4 text-sm">{transfer.fromUser?.name || 'Inventory'}</td>
