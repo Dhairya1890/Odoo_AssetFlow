@@ -19,7 +19,7 @@ export default function Login() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading, error } = useAuthStore();
+  const { login, signup, isLoading, error } = useAuthStore();
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -34,13 +34,31 @@ export default function Login() {
     }
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    toast.error('Signup functionality coming soon!');
+    if (!signupName || !signupEmail || !signupPassword) {
+      return toast.error('Please fill in all required fields');
+    }
+    if (signupPassword !== signupConfirm) {
+      return toast.error('Passwords do not match');
+    }
+    
+    const success = await signup(signupName, signupEmail, signupPassword);
+    if (success) {
+      toast.success('Account created successfully! You can now log in.');
+      setView('login');
+      setEmail(signupEmail);
+      setPassword('');
+      setSignupName('');
+      setSignupEmail('');
+      setSignupPassword('');
+      setSignupConfirm('');
+    }
   };
 
   const toggleAuth = (newView) => {
     setView(newView);
+    useAuthStore.setState({ error: null });
   };
 
   return (
@@ -91,7 +109,7 @@ export default function Login() {
               />
             </div>
             
-            {error && (
+            {error && view === 'login' && (
               <div className="text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-lg text-center">
                 {error}
               </div>
@@ -187,12 +205,24 @@ export default function Login() {
                 placeholder="••••••••" 
               />
             </div>
+            
+            {error && view === 'signup' && (
+              <div className="md:col-span-2 text-red-600 text-sm bg-red-50 border border-red-100 p-3 rounded-lg text-center">
+                {error}
+              </div>
+            )}
+
             <div className="md:col-span-2 mt-2">
               <button 
                 type="submit" 
-                className="w-full bg-primary text-on-primary py-3 rounded-lg text-sm font-medium hover:bg-on-surface-variant transition-all active:scale-[0.98] h-[46px]"
+                disabled={isLoading}
+                className="w-full bg-primary text-on-primary py-3 rounded-lg text-sm font-medium hover:bg-on-surface-variant transition-all active:scale-[0.98] h-[46px] flex justify-center items-center disabled:opacity-70"
               >
-                Create account
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  'Create account'
+                )}
               </button>
             </div>
           </form>
