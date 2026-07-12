@@ -86,6 +86,12 @@ exports.returnAsset = async (req, res) => {
       include: [{ model: Asset, as: 'asset' }],
     });
     if (!allocation) return error(res, 'Allocation not found', 404);
+    
+    // Ensure employees can only return their own assets
+    if (req.user.role === 'employee' && allocation.userId !== req.user.id) {
+      return error(res, 'Forbidden', 403);
+    }
+    
     if (allocation.status === 'returned') return error(res, 'Already returned', 400);
 
     await allocation.update({

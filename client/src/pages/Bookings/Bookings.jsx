@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Calendar as CalendarIcon, Clock, X, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
@@ -22,6 +22,7 @@ export default function Bookings() {
   });
   
   const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -51,9 +52,9 @@ export default function Bookings() {
   useEffect(() => {
     if (location.state?.openModal && !loading && bookableAssets.length > 0) {
       openBookingModal();
-      window.history.replaceState({}, document.title);
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, loading, bookableAssets]);
+  }, [location.state, loading, bookableAssets, navigate]);
 
   const openBookingModal = (assetId = '', bookingToEdit = null) => {
     if (bookingToEdit) {

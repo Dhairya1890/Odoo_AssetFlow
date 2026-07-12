@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Download, MoreVertical, X, UploadCloud, CheckCircle } from 'lucide-react';
 import apiClient from '../../api/client';
 
@@ -8,11 +8,12 @@ export default function Maintenance() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state?.openModal) {
       setIsModalOpen(true);
-      window.history.replaceState({}, document.title);
+      navigate(location.pathname, { replace: true, state: {} });
     }
 
     const fetchMaintenance = async () => {
