@@ -76,11 +76,17 @@ export default function Dashboard() {
               Register Asset
             </button>
           )}
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all">
+          <button 
+            onClick={() => navigate('/bookings', { state: { openModal: true } })}
+            className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all"
+          >
             <CalendarClock className="w-4 h-4" />
             Book Resource
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all">
+          <button 
+            onClick={() => navigate('/maintenance', { state: { openModal: true } })}
+            className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all"
+          >
             <Wrench className="w-4 h-4" />
             Raise Maintenance
           </button>
@@ -239,35 +245,7 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Asset Allocation Trends (Visual Extra) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-        <div className="bg-surface border border-outline-variant rounded-xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-lg font-medium text-primary">System Health</h3>
-              <p className="text-xs text-on-surface-variant mt-1">Real-time status of asset monitoring nodes.</p>
-            </div>
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-          </div>
-          <div className="h-32 flex items-end gap-1">
-            <div className="flex-1 bg-primary/10 h-[60%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[80%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[45%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary h-[90%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[70%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[55%] rounded-t-sm"></div>
-          </div>
-        </div>
-        <div className="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden">
-          <div className="relative z-10">
-            <h3 className="text-lg font-medium">Inventory Optimization</h3>
-            <p className="text-on-primary/70 text-sm mt-2">Our AI suggests decommissioning 12 legacy workstations to save $4,200/mo in support costs.</p>
-            <button className="mt-6 px-4 py-2 bg-on-primary text-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all">
-              Review Suggestion
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Visual Extra removed as requested */}
       
       <RegisterAssetModal 
         isOpen={isRegisterModalOpen} 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Search, Filter, Download, MoreVertical, X, UploadCloud, CheckCircle } from 'lucide-react';
 import apiClient from '../../api/client';
 
@@ -6,8 +7,14 @@ export default function Maintenance() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    if (location.state?.openModal) {
+      setIsModalOpen(true);
+      window.history.replaceState({}, document.title);
+    }
+
     const fetchMaintenance = async () => {
       try {
         const response = await apiClient.get('/maintenance');
@@ -19,7 +26,7 @@ export default function Maintenance() {
       }
     };
     fetchMaintenance();
-  }, []);
+  }, [location.state]);
 
   return (
     <div className="p-container-padding space-y-stack-lg">

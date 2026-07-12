@@ -1,8 +1,18 @@
 import { create } from 'zustand';
 import apiClient from '../api/client';
 
+const getTokenPayload = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
 export const useAuthStore = create((set) => ({
-  user: null,
+  user: getTokenPayload(),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
   isLoading: false,

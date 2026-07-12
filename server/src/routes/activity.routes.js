@@ -5,7 +5,7 @@ const requireRole = require('../middleware/role.middleware');
 
 const router = express.Router();
 
-// Admin only, or Asset Manager if needed. Let's restrict to admin & asset_manager for now.
-router.get('/', authenticate, requireRole('admin', 'asset_manager'), getLogs);
+// All authenticated users can access logs, but controller will scope the data
+router.get('/', authenticate, getLogs);
 
 module.exports = router;
