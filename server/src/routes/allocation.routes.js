@@ -16,6 +16,6 @@ router.get('/overdue', requireRole('asset_manager', 'admin'), ctrl.overdueAlloca
 router.get('/my', ctrl.myAllocations);
 router.get('/', requireRole('asset_manager', 'admin'), ctrl.listAllocations);
 router.post('/', requireRole('asset_manager', 'admin'), ctrl.allocateAsset);
-router.post('/:id/return', requireRole('asset_manager', 'admin'), ctrl.returnAsset);
+router.post('/:id/return', ctrl.returnAsset);
 
 module.exports = router;

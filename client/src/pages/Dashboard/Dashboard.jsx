@@ -13,8 +13,12 @@ import {
 } from 'lucide-react';
 import apiClient from '../../api/client';
 import RegisterAssetModal from '../../components/assets/RegisterAssetModal';
+import { useAuthStore } from '../../store/authStore';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
   const [stats, setStats] = useState({
     assetsAvailable: 0,
     assetsAllocated: 0,
@@ -28,32 +32,45 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [kpiRes, overdueRes, activityRes] = await Promise.all([
-          apiClient.get('/dashboard/kpis'),
-          apiClient.get('/allocations/overdue'),
-          apiClient.get('/activities')
-        ]);
-        
-        if (kpiRes.data?.data?.kpis) {
-          setStats(kpiRes.data.data.kpis);
-        }
-        if (overdueRes.data?.data?.allocations) {
-          setOverdueAssets(overdueRes.data.data.allocations.slice(0, 5)); // Just show top 5 on dash
-        }
-        if (activityRes.data?.data?.logs) {
-          setActivities(activityRes.data.data.logs.slice(0, 10)); // Top 10 activities
-        }
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
+  const fetchDashboardData = async () => {
+    try {
+      const overdueUrl = user?.role === 'employee' ? '/allocations/my' : '/allocations/overdue';
+      const [kpiRes, overdueRes, activityRes] = await Promise.all([
+        apiClient.get('/dashboard/kpis'),
+        apiClient.get(overdueUrl),
+        apiClient.get('/activities')
+      ]);
+      
+      if (kpiRes.data?.data?.kpis) {
+        setStats(kpiRes.data.data.kpis);
       }
-    };
+      if (overdueRes.data?.data?.allocations) {
+        setOverdueAssets(overdueRes.data.data.allocations.slice(0, 5)); // Just show top 5 on dash
+      }
+      if (activityRes.data?.data?.logs) {
+        setActivities(activityRes.data.data.logs.slice(0, 10)); // Top 10 activities
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [user]);
+
+  const handleReturnAsset = async (id) => {
+    if (!window.confirm('Are you sure you want to return this asset?')) return;
+    try {
+      await apiClient.post(`/allocations/${id}/return`, { conditionOnReturn: 'GOOD', notes: 'Returned via Dashboard' });
+      toast.success('Asset returned successfully!');
+      fetchDashboardData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to return asset');
+    }
+  };
 
   return (
     <div className="p-container-padding space-y-stack-lg">
@@ -64,18 +81,26 @@ export default function Dashboard() {
           <p className="text-sm text-on-surface-variant mt-1">System status and operational overview for today.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {['admin', 'asset_manager'].includes(user?.role) && (
+            <button 
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Register Asset
+            </button>
+          )}
           <button 
-            onClick={() => setIsRegisterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all"
+            onClick={() => navigate('/bookings', { state: { openModal: true } })}
+            className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all"
           >
-            <Plus className="w-4 h-4" />
-            Register Asset
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all">
             <CalendarClock className="w-4 h-4" />
             Book Resource
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all">
+          <button 
+            onClick={() => navigate('/maintenance', { state: { openModal: true } })}
+            className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all"
+          >
             <Wrench className="w-4 h-4" />
             Raise Maintenance
           </button>
@@ -149,8 +174,8 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
           <div className="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="text-error w-5 h-5" />
-              <h2 className="text-lg font-bold text-primary">Overdue Returns</h2>
+              <AlertTriangle className={user?.role === 'employee' ? "text-primary w-5 h-5" : "text-error w-5 h-5"} />
+              <h2 className="text-lg font-bold text-primary">{user?.role === 'employee' ? 'My Assets' : 'Overdue Returns'}</h2>
             </div>
             {stats.overdueReturns > 0 && (
               <span className="px-2 py-0.5 rounded bg-error-container text-on-error-container text-xs font-bold">Action Required</span>
@@ -162,26 +187,44 @@ export default function Dashboard() {
                 <tr className="bg-surface-container-low">
                   <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Asset Tag</th>
                   <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Asset Name</th>
-                  <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Assigned To</th>
+                  {user?.role !== 'employee' && <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Assigned To</th>}
                   <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Expected</th>
-                  <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">Overdue</th>
+                  <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant">{user?.role === 'employee' ? 'Status' : 'Overdue'}</th>
+                  {user?.role === 'employee' && <th className="px-6 py-3 text-xs font-bold uppercase text-on-surface-variant border-b border-outline-variant text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {overdueAssets.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-sm text-on-surface-variant font-medium">No overdue assets!</td>
+                    <td colSpan="6" className="px-6 py-8 text-center text-sm text-on-surface-variant font-medium">No assets found!</td>
                   </tr>
                 ) : overdueAssets.map((alloc) => {
                   const expected = new Date(alloc.expectedReturnDate);
                   const daysOverdue = Math.floor((new Date() - expected) / (1000 * 60 * 60 * 24));
+                  const isOverdue = alloc.status === 'overdue' || (alloc.status === 'active' && daysOverdue > 0);
+                  
                   return (
-                    <tr key={alloc.id} className="hover:bg-red-50/50 transition-colors">
+                    <tr key={alloc.id} className={`transition-colors ${isOverdue && user?.role !== 'employee' ? 'hover:bg-red-50/50' : 'hover:bg-slate-50'}`}>
                       <td className="px-6 py-4 font-mono text-xs font-bold">{alloc.asset?.assetTag}</td>
                       <td className="px-6 py-4 text-sm font-bold text-primary">{alloc.asset?.name}</td>
-                      <td className="px-6 py-4 text-sm text-on-surface-variant">{alloc.user?.name}</td>
+                      {user?.role !== 'employee' && <td className="px-6 py-4 text-sm text-on-surface-variant">{alloc.user?.name}</td>}
                       <td className="px-6 py-4 text-sm text-on-surface-variant">{expected.toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-error font-bold text-sm">{daysOverdue} Days</td>
+                      
+                      {user?.role === 'employee' ? (
+                        <td className="px-6 py-4">
+                           <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${isOverdue ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'}`}>
+                             {isOverdue ? 'Overdue' : 'Active'}
+                           </span>
+                        </td>
+                      ) : (
+                        <td className="px-6 py-4 text-error font-bold text-sm">{daysOverdue > 0 ? daysOverdue : 0} Days</td>
+                      )}
+                      
+                      {user?.role === 'employee' && (
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => handleReturnAsset(alloc.id)} className="px-3 py-1.5 bg-primary text-on-primary rounded text-xs font-bold hover:brightness-110 shadow-sm transition-all">Return</button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -234,35 +277,7 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Asset Allocation Trends (Visual Extra) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-        <div className="bg-surface border border-outline-variant rounded-xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-lg font-medium text-primary">System Health</h3>
-              <p className="text-xs text-on-surface-variant mt-1">Real-time status of asset monitoring nodes.</p>
-            </div>
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-          </div>
-          <div className="h-32 flex items-end gap-1">
-            <div className="flex-1 bg-primary/10 h-[60%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[80%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[45%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary h-[90%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[70%] rounded-t-sm"></div>
-            <div className="flex-1 bg-primary/10 h-[55%] rounded-t-sm"></div>
-          </div>
-        </div>
-        <div className="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden">
-          <div className="relative z-10">
-            <h3 className="text-lg font-medium">Inventory Optimization</h3>
-            <p className="text-on-primary/70 text-sm mt-2">Our AI suggests decommissioning 12 legacy workstations to save $4,200/mo in support costs.</p>
-            <button className="mt-6 px-4 py-2 bg-on-primary text-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all">
-              Review Suggestion
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Visual Extra removed as requested */}
       
       <RegisterAssetModal 
         isOpen={isRegisterModalOpen} 

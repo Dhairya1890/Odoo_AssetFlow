@@ -45,7 +45,18 @@ export default function MainLayout() {
         </div>
         
         <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.filter(item => {
+            if (user?.role === 'employee') {
+              return ['Dashboard', 'Assets', 'Bookings'].includes(item.name);
+            }
+            if (user?.role === 'department_head') {
+              return ['Dashboard', 'Assets', 'Allocations', 'Bookings', 'Maintenance'].includes(item.name);
+            }
+            if (user?.role === 'asset_manager') {
+              return item.name !== 'Org Setup';
+            }
+            return true;
+          }).map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

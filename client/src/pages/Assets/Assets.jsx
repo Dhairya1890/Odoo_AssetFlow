@@ -4,8 +4,10 @@ import { Plus, Filter, MoreVertical, X, Search, SlidersHorizontal, Edit2, Trash2
 import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
 import RegisterAssetModal from '../../components/assets/RegisterAssetModal';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Assets() {
+  const { user } = useAuthStore();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,13 +61,15 @@ export default function Assets() {
           <h1 className="text-2xl font-bold text-on-surface">Assets</h1>
           <p className="text-sm text-on-surface-variant mt-1">Manage and track your organization's hardware and infrastructure.</p>
         </div>
-        <button 
-          onClick={() => { setEditData(null); setIsModalOpen(true); }}
-          className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all hover:opacity-90 active:scale-95"
-        >
-          <Plus className="w-5 h-5" />
-          Register Asset
-        </button>
+        {user?.role !== 'employee' && (
+          <button 
+            onClick={() => { setEditData(null); setIsModalOpen(true); }}
+            className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all hover:opacity-90 active:scale-95"
+          >
+            <Plus className="w-5 h-5" />
+            Register Asset
+          </button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -130,14 +134,14 @@ export default function Assets() {
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Status</th>
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Location</th>
                 <th className="p-4 text-sm font-medium text-on-surface-variant whitespace-nowrap">Condition</th>
-                <th className="p-4 text-sm font-medium text-on-surface-variant text-right">Actions</th>
+                {user?.role !== 'employee' && <th className="p-4 text-sm font-medium text-on-surface-variant text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {assets.length === 0 && !loading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-on-surface-variant text-sm">
-                    No assets found. Click 'Register Asset' to add one.
+                  <td colSpan={user?.role === 'employee' ? 6 : 7} className="p-8 text-center text-on-surface-variant text-sm">
+                    No assets found.
                   </td>
                 </tr>
               ) : (
@@ -170,16 +174,18 @@ export default function Assets() {
                         {asset.condition.toLowerCase()}
                       </span>
                     </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleEdit(asset)} className="p-1.5 text-on-surface-variant hover:text-primary bg-slate-100 hover:bg-primary/10 rounded transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(asset.id)} className="p-1.5 text-on-surface-variant hover:text-error bg-slate-100 hover:bg-error/10 rounded transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                    {user?.role !== 'employee' && (
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleEdit(asset)} className="p-1.5 text-on-surface-variant hover:text-primary bg-slate-100 hover:bg-primary/10 rounded transition-colors">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(asset.id)} className="p-1.5 text-on-surface-variant hover:text-error bg-slate-100 hover:bg-error/10 rounded transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

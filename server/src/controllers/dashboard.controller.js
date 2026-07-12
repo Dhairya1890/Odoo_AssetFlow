@@ -9,40 +9,28 @@ exports.getDashboardKPIs = async (req, res) => {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
+    const isEmployee = req.user.role === 'employee';
+    const userAllocWhere = isEmployee ? { userId: req.user.id } : {};
+    const userBookingWhere = isEmployee ? { userId: req.user.id, status: { [Op.in]: ['upcoming', 'ongoing'] } } : { status: { [Op.in]: ['upcoming', 'ongoing'] } };
+    const userMaintWhere = isEmployee ? { raisedById: req.user.id, createdAt: { [Op.between]: [todayStart, todayEnd] } } : { createdAt: { [Op.between]: [todayStart, todayEnd] } };
+
     const [
       assetsAvailable,
       assetsAllocated,
       maintenanceToday,
-      activeBookings,
+      activeBookingsCount,
       pendingTransfers,
       overdueReturns
     ] = await Promise.all([
       Asset.count({ where: { status: 'available' } }),
-      Asset.count({ where: { status: 'allocated' } }),
-      MaintenanceRequest.count({
-        where: {
-          createdAt: { [Op.between]: [todayStart, todayEnd] }
-        }
-      }),
-      Booking.count({
-        where: {
-          status: 'ongoing' // Or upcoming based on definition, let's include ongoing + upcoming if needed
-        }
-      }),
-      TransferRequest.count({ where: { status: 'pending' } }),
-      Allocation.count({
-        where: {
-          status: 'overdue'
-        }
-      })
+      isEmployee 
+        ? Allocation.count({ where: { ...userAllocWhere, status: 'active' } })
+        : Asset.count({ where: { status: 'allocated' } }),
+      MaintenanceRequest.count({ where: userMaintWhere }),
+      Booking.count({ where: userBookingWhere }),
+      TransferRequest.count({ where: { status: 'pending' } }), // Simplifying for now
+      Allocation.count({ where: { ...userAllocWhere, status: 'overdue' } })
     ]);
-
-    // Adjusting active bookings to be 'upcoming' and 'ongoing'
-    const activeBookingsCount = await Booking.count({
-      where: {
-        status: { [Op.in]: ['upcoming', 'ongoing'] }
-      }
-    });
 
     return ok(res, 'Dashboard KPIs fetched', {
       kpis: {
