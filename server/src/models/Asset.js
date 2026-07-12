@@ -15,7 +15,7 @@ const Asset = sequelize.define('Asset', {
   },
   location: { type: DataTypes.STRING, allowNull: true },
   status: {
-    type: DataTypes.ENUM('available', 'allocated', 'reserved', 'under_maintenance', 'lost', 'retired', 'disposed'),
+    type: DataTypes.ENUM('available', 'allocated', 'reserved', 'under_maintenance', 'lost', 'retired', 'disposed', 'missing', 'damaged'),
     defaultValue: 'available',
   },
   isBookable: { type: DataTypes.BOOLEAN, defaultValue: false },

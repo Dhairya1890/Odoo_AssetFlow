@@ -17,5 +17,6 @@ router.patch('/:id', requireRole('asset_manager', 'admin'),
   upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'document', maxCount: 1 }]),
   ctrl.updateAsset
 );
+router.delete('/:id', requireRole('asset_manager', 'admin'), ctrl.deleteAsset);
 
 module.exports = router;

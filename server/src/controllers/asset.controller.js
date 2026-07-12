@@ -115,7 +115,7 @@ exports.updateAsset = async (req, res) => {
 exports.updateAssetStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const validStatuses = ['available', 'allocated', 'reserved', 'under_maintenance', 'lost', 'retired', 'disposed'];
+    const validStatuses = ['available', 'allocated', 'reserved', 'under_maintenance', 'lost', 'retired', 'disposed', 'missing', 'damaged'];
     if (!validStatuses.includes(status)) return error(res, 'Invalid status', 400);
 
     const asset = await Asset.findByPk(req.params.id);
@@ -139,6 +139,19 @@ exports.getQRCode = async (req, res) => {
 
     res.setHeader('Content-Type', 'image/png');
     res.send(buffer);
+  } catch (err) {
+    return error(res, err.message);
+  }
+};
+
+exports.deleteAsset = async (req, res) => {
+  try {
+    const asset = await Asset.findByPk(req.params.id);
+    if (!asset) return error(res, 'Asset not found', 404);
+
+    await asset.destroy();
+    await log(req.user.id, 'ASSET_DELETED', 'Asset', req.params.id, { assetTag: asset.assetTag, name: asset.name });
+    return ok(res, 'Asset deleted successfully');
   } catch (err) {
     return error(res, err.message);
   }
