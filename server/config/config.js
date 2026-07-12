@@ -6,7 +6,9 @@ module.exports = {
     password: process.env.DB_PASSWORD || 'admin',
     database: process.env.DB_NAME || 'assetflow_dev',
     host: process.env.DB_HOST || '127.0.0.1',
+<<<<<<< HEAD
     port: process.env.DB_PORT || 5432,
+    port: parseInt(process.env.DB_PORT) || 5432,
     dialect: 'postgres',
     logging: false,
   },
