@@ -13,8 +13,11 @@ import {
 } from 'lucide-react';
 import apiClient from '../../api/client';
 import RegisterAssetModal from '../../components/assets/RegisterAssetModal';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const user = useAuthStore(state => state.user);
   const [stats, setStats] = useState({
     assetsAvailable: 0,
     assetsAllocated: 0,
@@ -64,13 +67,15 @@ export default function Dashboard() {
           <p className="text-sm text-on-surface-variant mt-1">System status and operational overview for today.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button 
-            onClick={() => setIsRegisterModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            Register Asset
-          </button>
+          {['admin', 'asset_manager'].includes(user?.role) && (
+            <button 
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Register Asset
+            </button>
+          )}
           <button className="flex items-center gap-2 px-4 py-2 bg-surface border border-outline-variant text-primary rounded-lg text-sm font-medium hover:bg-surface-container-high transition-all">
             <CalendarClock className="w-4 h-4" />
             Book Resource
