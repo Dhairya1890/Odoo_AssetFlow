@@ -10,6 +10,7 @@ router.post('/transfer', requireRole('employee', 'department_head', 'asset_manag
 router.get('/transfers', requireRole('asset_manager', 'department_head', 'admin'), ctrl.listTransfers);
 router.patch('/transfers/:id/approve', requireRole('asset_manager', 'department_head', 'admin'), ctrl.approveTransfer);
 router.patch('/transfers/:id/reject', requireRole('asset_manager', 'department_head', 'admin'), ctrl.rejectTransfer);
+router.patch('/transfers/:id/allocate', requireRole('asset_manager', 'admin'), ctrl.allocateTransfer);
 
 // Allocation routes
 router.get('/overdue', requireRole('asset_manager', 'admin'), ctrl.overdueAllocations);

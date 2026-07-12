@@ -53,8 +53,30 @@ exports.createBooking = async (req, res) => {
     const overlap = await checkBookingOverlap(assetId, startTime, endTime);
     if (overlap) return error(res, 'Time slot overlaps with an existing booking', 409, [overlap]);
 
+    let initialStatus = 'pending';
+    if (['admin', 'asset_manager', 'department_head'].includes(req.user.role)) {
+      initialStatus = 'approved';
+    }
+
     const booking = await Booking.create({
-      assetId, userId: req.user.id, startTime, endTime, notes, status: 'upcoming',
+      assetId, userId: req.user.id, startTime, endTime, notes, status: initialStatus,
+    });
+
+    const { Allocation, TransferRequest } = require('../models');
+    const activeAllocation = await Allocation.findOne({
+      where: { assetId, status: ['active', 'overdue'] },
+    });
+    const fromUserId = activeAllocation ? activeAllocation.userId : null;
+
+    await TransferRequest.create({
+      assetId,
+      fromUserId,
+      toUserId: req.user.id,
+      requestedById: req.user.id,
+      notes: `Booking for ${new Date(startTime).toLocaleDateString()}: ${notes || ''}`,
+      expectedReturnDate: endTime,
+      status: initialStatus,
+      approvedById: initialStatus === 'approved' ? req.user.id : null,
     });
 
     await log(req.user.id, 'BOOKING_CREATED', 'Booking', booking.id, { assetId, startTime, endTime });

@@ -138,14 +138,21 @@ exports.raiseTransfer = async (req, res) => {
     const activeAllocation = await Allocation.findOne({
       where: { assetId, status: ['active', 'overdue'] },
     });
-    if (!activeAllocation) return error(res, 'No active allocation found for this asset', 400);
+    const fromUserId = activeAllocation ? activeAllocation.userId : null;
+
+    let initialStatus = 'pending';
+    if (['admin', 'asset_manager', 'department_head'].includes(req.user.role)) {
+      initialStatus = 'approved';
+    }
 
     const transfer = await TransferRequest.create({
       assetId,
-      fromUserId: activeAllocation.userId,
+      fromUserId,
       toUserId,
       requestedById: req.user.id,
       notes,
+      status: initialStatus,
+      approvedById: initialStatus === 'approved' ? req.user.id : null,
     });
 
     await log(req.user.id, 'TRANSFER_REQUESTED', 'TransferRequest', transfer.id, { assetId, toUserId });
@@ -157,9 +164,7 @@ exports.raiseTransfer = async (req, res) => {
 
 exports.listTransfers = async (req, res) => {
   try {
-    const where = { status: 'pending' };
     const transfers = await TransferRequest.findAll({
-      where,
       include: [
         { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] },
         { model: User, as: 'fromUser', attributes: ['id', 'name', 'email'] },
@@ -181,6 +186,30 @@ exports.approveTransfer = async (req, res) => {
     if (!transfer) return error(res, 'Transfer not found', 404);
     if (transfer.status !== 'pending') return error(res, 'Transfer already processed', 400);
 
+    await transfer.update({ status: 'approved', approvedById: req.user.id });
+
+    await notificationService.notify(transfer.requestedById, 'transfer_approved',
+      `Your asset request has been approved.`, { transferId: transfer.id });
+
+    await log(req.user.id, 'TRANSFER_APPROVED', 'TransferRequest', transfer.id, { assetId: transfer.assetId });
+    return ok(res, 'Transfer approved', { transfer });
+  } catch (err) {
+    return error(res, err.message);
+  }
+};
+
+exports.allocateTransfer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const transfer = await TransferRequest.findByPk(id);
+    if (!transfer) return error(res, 'Transfer not found', 404);
+    if (transfer.status !== 'approved') return error(res, 'Transfer must be approved before allocation', 400);
+
+    // Only Admin or Asset Manager can allocate
+    if (!['admin', 'asset_manager'].includes(req.user.role)) {
+      return error(res, 'Forbidden. Only Asset Managers can allocate.', 403);
+    }
+
     // Re-allocate: mark old allocation returned, create new one
     await Allocation.update(
       { status: 'returned', actualReturnDate: new Date() },
@@ -193,17 +222,19 @@ exports.approveTransfer = async (req, res) => {
       allocatedById: req.user.id,
       status: 'active',
     });
+    await Asset.update({ status: 'allocated' }, { where: { id: transfer.assetId } });
 
-    await transfer.update({ status: 'approved', approvedById: req.user.id });
+    await transfer.update({ status: 'allocated' });
 
-    // Notify both
-    await notificationService.notify(transfer.fromUserId, 'transfer_approved',
-      `Your asset transfer request has been approved.`, { transferId: transfer.id });
+    if (transfer.fromUserId) {
+      await notificationService.notify(transfer.fromUserId, 'transfer_approved',
+        `Your asset has been transferred.`, { transferId: transfer.id });
+    }
     await notificationService.notify(transfer.toUserId, 'asset_assigned',
-      `Asset ID ${transfer.assetId} has been transferred to you.`, { transferId: transfer.id });
+      `Asset ID ${transfer.assetId} has been allocated to you.`, { transferId: transfer.id });
 
-    await log(req.user.id, 'TRANSFER_APPROVED', 'TransferRequest', transfer.id, { assetId: transfer.assetId });
-    return ok(res, 'Transfer approved', { transfer, newAllocation });
+    await log(req.user.id, 'TRANSFER_ALLOCATED', 'TransferRequest', transfer.id, { assetId: transfer.assetId });
+    return ok(res, 'Transfer allocated', { transfer, newAllocation });
   } catch (err) {
     return error(res, err.message);
   }

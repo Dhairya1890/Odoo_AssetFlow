@@ -1,26 +1,52 @@
 import { useState, useEffect } from 'react';
 import { Plus, Check, X, TrendingUp, AlertCircle, Box } from 'lucide-react';
 import apiClient from '../../api/client';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Allocations() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('active');
   const [allocations, setAllocations] = useState([]);
+  const [transfers, setTransfers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [allocRes, transRes] = await Promise.all([
+        apiClient.get('/allocations'),
+        apiClient.get('/allocations/transfers')
+      ]);
+      setAllocations(allocRes.data?.data?.allocations || []);
+      setTransfers(transRes.data?.data?.transfers || []);
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchAllocations = async () => {
-      try {
-        const response = await apiClient.get('/allocations');
-        setAllocations(response.data?.data?.allocations || []);
-      } catch (error) {
-        console.error('Failed to fetch allocations:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllocations();
+    fetchData();
   }, []);
+
+  const handleAction = async (id, action) => {
+    try {
+      await apiClient.patch(`/allocations/transfers/${id}/${action}`);
+      toast.success(`Transfer ${action}d successfully`);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || `Failed to ${action} transfer`);
+    }
+  };
+
+  const activeAllocations = allocations.filter(a => a.status === 'active' || a.status === 'overdue');
+  const overdueAllocations = allocations.filter(a => a.status === 'overdue').length;
+  const healthPercentage = allocations.length === 0 ? 100 : Math.round(((allocations.length - overdueAllocations) / allocations.length) * 100);
+  
+  const pendingCount = transfers.filter(t => t.status === 'pending').length;
 
   return (
     <div className="p-container-padding">
@@ -77,18 +103,18 @@ export default function Allocations() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {allocations.length === 0 ? (
+              {activeAllocations.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="p-8 text-center text-on-surface-variant text-sm">
                     No active allocations found.
                   </td>
                 </tr>
               ) : (
-                allocations.map((allocation) => (
+                activeAllocations.map((allocation) => (
                   <tr key={allocation.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium">{allocation.Asset?.assetTag || 'N/A'}</td>
-                    <td className="px-6 py-4 text-sm">{allocation.Asset?.name || 'N/A'}</td>
-                    <td className="px-6 py-4 text-sm">{allocation.User?.name || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-sm font-medium">{allocation.asset?.assetTag || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm">{allocation.asset?.name || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm">{allocation.user?.name || 'Unknown'}</td>
                     <td className="px-6 py-4 text-sm">{allocation.expectedReturnDate ? new Date(allocation.expectedReturnDate).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">
                       <span className="bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded-full text-xs font-medium">
@@ -108,16 +134,59 @@ export default function Allocations() {
                 <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium">From</th>
                 <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium">To</th>
                 <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium">Requested By</th>
+                <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium">Expected Return</th>
                 <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium">Status</th>
                 <th className="px-6 py-4 text-xs uppercase tracking-wider text-on-surface-variant font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              <tr>
-                <td colSpan="6" className="p-8 text-center text-on-surface-variant text-sm">
-                  No transfer requests pending.
-                </td>
-              </tr>
+              {transfers.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-on-surface-variant text-sm">
+                    No transfer requests found.
+                  </td>
+                </tr>
+              ) : (
+                transfers.map((transfer) => (
+                  <tr key={transfer.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium">{transfer.asset?.name || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-sm">{transfer.fromUser?.name || 'Inventory'}</td>
+                    <td className="px-6 py-4 text-sm">{transfer.toUser?.name || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-sm">{transfer.requestedBy?.name || 'Unknown'}</td>
+                    <td className="px-6 py-4 text-sm">{transfer.expectedReturnDate ? new Date(transfer.expectedReturnDate).toLocaleDateString() : '-'}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        transfer.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                        transfer.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        transfer.status === 'allocated' ? 'bg-blue-100 text-blue-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {transfer.status === 'pending' && ['department_head', 'asset_manager', 'admin'].includes(user?.role) && (
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleAction(transfer.id, 'approve')} className="p-1 hover:bg-green-50 text-green-600 rounded">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleAction(transfer.id, 'reject')} className="p-1 hover:bg-red-50 text-red-600 rounded">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      {transfer.status === 'approved' && ['asset_manager', 'admin'].includes(user?.role) && (
+                        <button 
+                          onClick={() => handleAction(transfer.id, 'allocate')} 
+                          className="text-xs bg-primary text-on-primary px-3 py-1.5 rounded hover:opacity-90"
+                        >
+                          Allocate
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         )}
@@ -128,7 +197,7 @@ export default function Allocations() {
         <div className="md:col-span-2 bg-white p-6 rounded-xl border border-outline-variant relative overflow-hidden group">
           <div className="relative z-10">
             <p className="text-sm font-medium text-on-surface-variant">Allocation Health</p>
-            <h3 className="text-4xl font-bold mt-2 text-primary">94%</h3>
+            <h3 className="text-4xl font-bold mt-2 text-primary">{healthPercentage}%</h3>
             <p className="text-sm text-on-surface-variant mt-2">Assets returned on time this quarter. Great performance!</p>
           </div>
           <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
@@ -137,15 +206,15 @@ export default function Allocations() {
         </div>
         <div className="bg-white p-6 rounded-xl border border-outline-variant">
           <p className="text-sm font-medium text-on-surface-variant">Pending Transfers</p>
-          <h3 className="text-2xl font-bold mt-2 text-primary">0</h3>
+          <h3 className="text-2xl font-bold mt-2 text-primary">{pendingCount}</h3>
           <div className="mt-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-slate-300"></span>
-            <span className="text-xs text-on-surface-variant">All caught up</span>
+            <span className={`w-2 h-2 rounded-full ${pendingCount > 0 ? 'bg-amber-400' : 'bg-slate-300'}`}></span>
+            <span className="text-xs text-on-surface-variant">{pendingCount > 0 ? 'Needs attention' : 'All caught up'}</span>
           </div>
         </div>
         <div className="bg-white p-6 rounded-xl border border-outline-variant">
-          <p className="text-sm font-medium text-on-surface-variant">Active Loans</p>
-          <h3 className="text-2xl font-bold mt-2 text-primary">{allocations.length}</h3>
+          <p className="text-sm font-medium text-on-surface-variant">Active Allocations</p>
+          <h3 className="text-2xl font-bold mt-2 text-primary">{activeAllocations.length}</h3>
           <p className="text-xs text-on-surface-variant mt-4">Current allocations</p>
         </div>
       </div>

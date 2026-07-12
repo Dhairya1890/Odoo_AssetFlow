@@ -8,8 +8,8 @@ const Booking = sequelize.define('Booking', {
   startTime: { type: DataTypes.DATE, allowNull: false },
   endTime: { type: DataTypes.DATE, allowNull: false },
   status: {
-    type: DataTypes.ENUM('upcoming', 'ongoing', 'completed', 'cancelled'),
-    defaultValue: 'upcoming',
+    type: DataTypes.ENUM('pending', 'approved', 'ongoing', 'completed', 'cancelled'),
+    defaultValue: 'pending',
   },
   notes: { type: DataTypes.TEXT, allowNull: true },
 }, { tableName: 'Bookings', timestamps: true });

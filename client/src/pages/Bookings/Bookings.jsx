@@ -112,7 +112,7 @@ export default function Bookings() {
 
   // Calculations for UI
   const myBookings = bookings.filter(b => b.userId === user?.id);
-  const myUpcoming = myBookings.filter(b => b.status === 'upcoming' || b.status === 'APPROVED');
+  const myUpcoming = myBookings.filter(b => b.status === 'pending' || b.status === 'approved' || b.status === 'APPROVED');
   
   const usedHours = myUpcoming.reduce((acc, curr) => {
     const diff = new Date(curr.endTime) - new Date(curr.startTime);
@@ -283,7 +283,7 @@ export default function Bookings() {
       {/* My Bookings Table */}
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-primary">My Upcoming Bookings</h3>
+          <h3 className="text-xl font-bold text-primary">My Pending Bookings</h3>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
           <table className="w-full text-left">
@@ -316,7 +316,7 @@ export default function Bookings() {
                     <td className="px-6 py-4 text-sm text-on-surface-variant italic">{booking.notes || '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-tight ${
-                        booking.status === 'upcoming' || booking.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
+                        booking.status === 'pending' || booking.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
                         booking.status === 'cancelled' ? 'bg-red-100 text-red-700' :
                         'bg-amber-100 text-amber-700'
                       }`}>
@@ -324,7 +324,7 @@ export default function Bookings() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {booking.status === 'upcoming' && (
+                      {booking.status === 'pending' && (
                         <>
                           <button onClick={() => openBookingModal(booking.assetId, booking)} className="p-1 hover:text-primary transition-colors"><Edit2 className="w-4 h-4 inline" /></button>
                           <button onClick={() => setDeleteId(booking.id)} className="p-1 hover:text-error transition-colors ml-2"><Trash2 className="w-4 h-4 inline" /></button>
