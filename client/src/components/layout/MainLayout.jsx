@@ -47,7 +47,7 @@ export default function MainLayout() {
         <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
           {navItems.filter(item => {
             if (user?.role === 'employee') {
-              return ['Dashboard', 'Assets', 'Bookings'].includes(item.name);
+              return ['Dashboard', 'Assets', 'Bookings', 'Maintenance'].includes(item.name);
             }
             if (user?.role === 'department_head') {
               return ['Dashboard', 'Assets', 'Allocations', 'Bookings', 'Maintenance'].includes(item.name);

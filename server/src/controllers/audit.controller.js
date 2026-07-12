@@ -88,18 +88,32 @@ exports.markItem = async (req, res) => {
 
 exports.getReport = async (req, res) => {
   try {
-    const items = await AuditItem.findAll({
-      where: { auditCycleId: req.params.id, status: { [Op.ne]: 'pending' } },
-      include: [{ model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] }],
-    });
+    const [allItems, flaggedItems] = await Promise.all([
+      AuditItem.findAll({ where: { auditCycleId: req.params.id }, attributes: ['id', 'status'] }),
+      AuditItem.findAll({
+        where: { auditCycleId: req.params.id, status: { [Op.ne]: 'pending' } },
+        include: [
+          { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name', 'location'] },
+          { model: User, as: 'auditor', attributes: ['id', 'name'] },
+        ],
+      }),
+    ]);
 
-    const grouped = items.reduce((acc, item) => {
+    const grouped = flaggedItems.reduce((acc, item) => {
       if (!acc[item.status]) acc[item.status] = [];
       acc[item.status].push(item);
       return acc;
     }, {});
 
-    return ok(res, 'Audit report generated', { report: grouped });
+    const summary = {
+      total: allItems.length,
+      pending: allItems.filter(i => i.status === 'pending').length,
+      verified: allItems.filter(i => i.status === 'verified').length,
+      missing: allItems.filter(i => i.status === 'missing').length,
+      damaged: allItems.filter(i => i.status === 'damaged').length,
+    };
+
+    return ok(res, 'Audit report generated', { report: grouped, summary });
   } catch (err) {
     return error(res, err.message);
   }

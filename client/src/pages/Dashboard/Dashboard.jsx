@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [returnId, setReturnId] = useState(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -62,10 +63,10 @@ export default function Dashboard() {
   }, [user]);
 
   const handleReturnAsset = async (id) => {
-    if (!window.confirm('Are you sure you want to return this asset?')) return;
     try {
       await apiClient.post(`/allocations/${id}/return`, { conditionOnReturn: 'GOOD', notes: 'Returned via Dashboard' });
       toast.success('Asset returned successfully!');
+      setReturnId(null);
       fetchDashboardData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to return asset');
@@ -222,7 +223,7 @@ export default function Dashboard() {
                       
                       {user?.role === 'employee' && (
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => handleReturnAsset(alloc.id)} className="px-3 py-1.5 bg-primary text-on-primary rounded text-xs font-bold hover:brightness-110 shadow-sm transition-all">Return</button>
+                          <button onClick={() => setReturnId(alloc.id)} className="px-3 py-1.5 bg-primary text-on-primary rounded text-xs font-bold hover:brightness-110 shadow-sm transition-all">Return</button>
                         </td>
                       )}
                     </tr>
@@ -284,6 +285,31 @@ export default function Dashboard() {
         onClose={() => setIsRegisterModalOpen(false)} 
         onSuccess={() => {}}
       />
+      
+      {/* Return Confirmation Modal */}
+      {returnId && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setReturnId(null)}></div>
+          <div className="relative bg-surface w-full max-w-sm rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-primary mb-2">Return Asset</h3>
+            <p className="text-sm text-on-surface-variant mb-6">Are you sure you want to return this asset? This will make it available for others to use.</p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setReturnId(null)} 
+                className="px-4 py-2 border border-outline-variant rounded-lg text-sm font-medium hover:bg-surface-container-high transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => handleReturnAsset(returnId)} 
+                className="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:brightness-110 transition-colors shadow-sm"
+              >
+                Confirm Return
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

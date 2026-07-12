@@ -2,11 +2,22 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Download, MoreVertical, X, UploadCloud, CheckCircle } from 'lucide-react';
 import apiClient from '../../api/client';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Maintenance() {
+  const { user } = useAuthStore();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [eligibleAssets, setEligibleAssets] = useState([]);
+  const [formData, setFormData] = useState({
+    assetId: '',
+    priority: 'Low',
+    issueDescription: ''
+  });
+  const [photoFile, setPhotoFile] = useState(null);
+  
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -18,16 +29,74 @@ export default function Maintenance() {
 
     const fetchMaintenance = async () => {
       try {
-        const response = await apiClient.get('/maintenance');
-        setTasks(response.data?.data?.tickets || []);
+        const url = user?.role === 'employee' ? '/maintenance/my' : '/maintenance';
+        const response = await apiClient.get(url);
+        setTasks(response.data?.data?.requests || response.data?.data?.tickets || []);
       } catch (error) {
         console.error('Failed to fetch maintenance tasks:', error);
       } finally {
         setLoading(false);
       }
     };
+    
+    const fetchAssets = async () => {
+      try {
+        if (user?.role === 'employee') {
+          const [allocRes, bookRes] = await Promise.all([
+            apiClient.get('/allocations/my'),
+            apiClient.get('/bookings/my') // actually it's /bookings and filtered in backend if employee? wait, /bookings/my exists!
+          ]);
+          const allocAssets = allocRes.data?.data?.allocations.map(a => a.asset) || [];
+          const bookAssets = bookRes.data?.data?.bookings.map(b => b.asset) || [];
+          
+          const combined = [...allocAssets, ...bookAssets].filter(Boolean);
+          const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+          setEligibleAssets(unique);
+        } else {
+          const res = await apiClient.get('/assets');
+          setEligibleAssets(res.data?.data?.assets || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch assets:', err);
+      }
+    };
+
     fetchMaintenance();
-  }, [location.state]);
+    fetchAssets();
+  }, [location.state, user]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.assetId || !formData.issueDescription) {
+      toast.error('Asset and Description are required');
+      return;
+    }
+    try {
+      const formPayload = new FormData();
+      formPayload.append('assetId', formData.assetId);
+      formPayload.append('priority', formData.priority.toLowerCase());
+      formPayload.append('issueDescription', formData.issueDescription);
+      if (photoFile) formPayload.append('photo', photoFile);
+
+      await apiClient.post('/maintenance', formPayload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      toast.success('Maintenance request raised successfully');
+      setIsModalOpen(false);
+      setFormData({ assetId: '', priority: 'Low', issueDescription: '' });
+      setPhotoFile(null);
+      // Refresh tasks
+      const url = user?.role === 'employee' ? '/maintenance/my' : '/maintenance';
+      const response = await apiClient.get(url);
+      setTasks(response.data?.data?.requests || response.data?.data?.tickets || []);
+      
+      // Update Dashboard KPIs if required (mocking event for now)
+      window.dispatchEvent(new Event('activity-updated'));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to raise request');
+    }
+  };
 
   return (
     <div className="p-container-padding space-y-stack-lg">
@@ -206,66 +275,96 @@ export default function Maintenance() {
               </button>
             </div>
             
-            <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium block text-on-surface">Search Asset</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-5 h-5 text-on-surface-variant" />
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium block text-on-surface">Select Asset</label>
+                  <select 
+                    required
+                    value={formData.assetId}
+                    onChange={(e) => setFormData({ ...formData, assetId: e.target.value })}
+                    className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none cursor-pointer transition-all"
+                  >
+                    <option value="">-- Choose an asset --</option>
+                    {eligibleAssets.map(asset => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.assetTag} - {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium block text-on-surface">Priority</label>
+                    <select 
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none cursor-pointer transition-all"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium block text-on-surface">Category</label>
+                    <select className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none cursor-pointer transition-all">
+                      <option>Hardware</option>
+                      <option>Electrical</option>
+                      <option>Plumbing</option>
+                      <option>HVAC</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium block text-on-surface">Issue Description</label>
+                  <textarea 
+                    required
+                    value={formData.issueDescription}
+                    onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
+                    className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none transition-all" 
+                    placeholder="Describe the problem in detail..." 
+                    rows="4"
+                  ></textarea>
+                </div>
+                
+                <div className="relative flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low rounded-lg border border-dashed border-outline-variant hover:bg-surface-container-high transition-colors">
                   <input 
-                    className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-all" 
-                    placeholder="Enter Asset ID or Name..." 
-                    type="text" 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => setPhotoFile(e.target.files[0])}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
+                  {photoFile ? (
+                    <>
+                      <CheckCircle className="w-8 h-8 text-primary" />
+                      <span className="text-sm text-on-surface-variant">{photoFile.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-8 h-8 text-on-surface-variant" />
+                      <span className="text-sm text-on-surface-variant">Click to attach photo (Optional)</span>
+                    </>
+                  )}
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium block text-on-surface">Priority</label>
-                  <select className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none cursor-pointer transition-all">
-                    <option>Low</option>
-                    <option>Medium</option>
-                    <option>High</option>
-                    <option>Critical</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium block text-on-surface">Category</label>
-                  <select className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm appearance-none cursor-pointer transition-all">
-                    <option>Electrical</option>
-                    <option>Plumbing</option>
-                    <option>Hardware</option>
-                    <option>HVAC</option>
-                  </select>
-                </div>
+              <div className="p-6 bg-surface-container-low border-t border-outline-variant flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2 border border-outline-variant rounded-lg text-sm font-medium hover:bg-surface transition-colors text-on-surface"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="px-6 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all">
+                  Submit Request
+                </button>
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium block text-on-surface">Issue Description</label>
-                <textarea 
-                  className="w-full px-4 py-2 border border-outline-variant rounded-lg bg-surface focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none transition-all" 
-                  placeholder="Describe the problem in detail..." 
-                  rows="4"
-                ></textarea>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center gap-2 p-6 bg-surface-container-low rounded-lg border border-dashed border-outline-variant cursor-pointer hover:bg-surface-container-high transition-colors">
-                <UploadCloud className="w-8 h-8 text-on-surface-variant" />
-                <span className="text-sm text-on-surface-variant">Drag or click to attach photos</span>
-              </div>
-            </div>
-            
-            <div className="p-6 bg-surface-container-low border-t border-outline-variant flex justify-end gap-3">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2 border border-outline-variant rounded-lg text-sm font-medium hover:bg-surface transition-colors text-on-surface"
-              >
-                Cancel
-              </button>
-              <button className="px-6 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all">
-                Submit Request
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

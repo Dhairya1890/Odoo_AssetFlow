@@ -13,6 +13,7 @@ export default function Bookings() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [weekOffset, setWeekOffset] = useState(0);
   
   const [formData, setFormData] = useState({
     assetId: '',
@@ -120,6 +121,22 @@ export default function Bookings() {
   }, 0).toFixed(1);
   const quotaPercent = Math.min((usedHours / 20) * 100, 100);
 
+  // Calendar calculations
+  const today = new Date();
+  const realCurrentDayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  
+  const viewDate = new Date();
+  viewDate.setDate(viewDate.getDate() + (weekOffset * 7));
+  const viewDayIdx = viewDate.getDay() === 0 ? 6 : viewDate.getDay() - 1;
+  
+  const mondayDate = new Date(viewDate);
+  mondayDate.setDate(viewDate.getDate() - viewDayIdx);
+  mondayDate.setHours(0, 0, 0, 0);
+  
+  const sundayDate = new Date(mondayDate);
+  sundayDate.setDate(mondayDate.getDate() + 6);
+  sundayDate.setHours(23, 59, 59, 999);
+
   return (
     <div className="p-container-padding flex flex-col gap-stack-lg">
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
@@ -181,6 +198,13 @@ export default function Bookings() {
             <div className="flex items-center gap-4">
               <h2 className="text-xl font-bold text-primary">Calendar View</h2>
             </div>
+            <div className="flex items-center gap-1 bg-surface-container-low rounded-lg p-1 border border-outline-variant">
+              <button onClick={() => setWeekOffset(w => w - 1)} className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"><ChevronLeft className="w-5 h-5" /></button>
+              <span className="text-sm font-bold px-3 text-primary">
+                {weekOffset === 0 ? 'Current Week' : weekOffset > 0 ? `Next +${weekOffset}` : `Past ${weekOffset}`}
+              </span>
+              <button onClick={() => setWeekOffset(w => w + 1)} className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"><ChevronRight className="w-5 h-5" /></button>
+            </div>
           </header>
           
           <div className="flex flex-col h-[600px] overflow-hidden">
@@ -188,13 +212,10 @@ export default function Bookings() {
             <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b border-outline-variant bg-surface-container-low">
               <div className="h-10 border-r border-outline-variant"></div>
               {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map((day, idx) => {
-                const today = new Date();
-                const currentDayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1;
-                const isToday = idx === currentDayIdx;
+                const date = new Date(mondayDate);
+                date.setDate(mondayDate.getDate() + idx);
                 
-                // Calculate date for the week
-                const date = new Date(today);
-                date.setDate(today.getDate() - currentDayIdx + idx);
+                const isToday = weekOffset === 0 && idx === realCurrentDayIdx;
                 
                 return (
                   <div key={day} className={`h-10 flex flex-col items-center justify-center border-r border-outline-variant ${isToday ? 'bg-secondary-container/20' : ''}`}>
@@ -234,6 +255,8 @@ export default function Bookings() {
                   {bookings.filter(b => b.status !== 'cancelled').map(booking => {
                     const start = new Date(booking.startTime);
                     const end = new Date(booking.endTime);
+                    
+                    if (start > sundayDate || end < mondayDate) return null; // Outside current week view
                     
                     const dayIdx = start.getDay() === 0 ? 6 : start.getDay() - 1;
                     const left = dayIdx * 14.28;

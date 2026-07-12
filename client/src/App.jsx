@@ -10,6 +10,7 @@ import Bookings from './pages/Bookings/Bookings'
 import Maintenance from './pages/Maintenance/Maintenance'
 import Settings from './pages/Settings/Settings'
 import Reports from './pages/Reports/Reports'
+import Audits from './pages/Audits/Audits'
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
             <Route path="allocations" element={<Allocations />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="maintenance" element={<Maintenance />} />
-            <Route path="audits" element={<div className="text-on-surface text-xl p-8">Audits Page (Coming Soon)</div>} />
+            <Route path="audits" element={<Audits />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
           </Route>

@@ -14,11 +14,26 @@ exports.listBookings = async (req, res) => {
     const bookings = await Booking.findAll({
       where,
       include: [
-        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] },
+        { model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name', 'status'] },
         { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
       ],
       order: [['startTime', 'ASC']],
     });
+    
+    // Auto-complete past bookings
+    const now = new Date();
+    for (let b of bookings) {
+      if (b.status === 'upcoming' || b.status === 'ongoing') {
+        if (new Date(b.endTime) < now) {
+          await b.update({ status: 'completed' });
+          b.status = 'completed';
+        } else if (new Date(b.startTime) <= now && b.status === 'upcoming') {
+          await b.update({ status: 'ongoing' });
+          b.status = 'ongoing';
+        }
+      }
+    }
+    
     return ok(res, 'Bookings fetched', { bookings });
   } catch (err) {
     return error(res, err.message);
@@ -29,9 +44,24 @@ exports.myBookings = async (req, res) => {
   try {
     const bookings = await Booking.findAll({
       where: { userId: req.user.id },
-      include: [{ model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] }],
+      include: [{ model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name', 'status'] }],
       order: [['startTime', 'ASC']],
     });
+    
+    // Auto-complete past bookings
+    const now = new Date();
+    for (let b of bookings) {
+      if (b.status === 'upcoming' || b.status === 'ongoing') {
+        if (new Date(b.endTime) < now) {
+          await b.update({ status: 'completed' });
+          b.status = 'completed';
+        } else if (new Date(b.startTime) <= now && b.status === 'upcoming') {
+          await b.update({ status: 'ongoing' });
+          b.status = 'ongoing';
+        }
+      }
+    }
+    
     return ok(res, 'My bookings fetched', { bookings });
   } catch (err) {
     return error(res, err.message);
