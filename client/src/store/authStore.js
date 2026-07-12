@@ -31,6 +31,21 @@ export const useAuthStore = create((set) => ({
     }
   },
 
+  signup: async (name, email, password) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.post('/auth/signup', { name, email, password });
+      set({ isLoading: false });
+      return true;
+    } catch (err) {
+      set({ 
+        error: err.response?.data?.error || 'Signup failed', 
+        isLoading: false 
+      });
+      return false;
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     set({ user: null, token: null, isAuthenticated: false });

@@ -9,6 +9,8 @@ const path = require('path');
 const { sequelize } = require('./models');
 const notificationService = require('./services/notification.service');
 const { startOverdueChecker } = require('./jobs/overdueChecker.job');
+const { startBookingReminder } = require('./jobs/bookingReminder.job');
+const { startAuditStatusJob } = require('./jobs/auditStatus.job');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -47,6 +49,8 @@ app.use('/api/maintenance', require('./routes/maintenance.routes'));
 app.use('/api/audits', require('./routes/audit.routes'));
 app.use('/api/reports', require('./routes/report.routes'));
 app.use('/api/notifications', require('./routes/notification.routes'));
+app.use('/api/activities', require('./routes/activity.routes'));
+app.use('/api/dashboard', require('./routes/dashboard.routes'));
 
 // ── Health check ───────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
@@ -65,8 +69,10 @@ const PORT = process.env.PORT || 5000;
 
 sequelize.authenticate()
   .then(() => {
-    console.log('[DB] Connected to MySQL.');
+    console.log('[DB] Connected to PostgreSQL.');
     startOverdueChecker();
+    startBookingReminder();
+    startAuditStatusJob();
     httpServer.listen(PORT, () => {
       console.log(`[Server] AssetFlow API running on http://localhost:${PORT}`);
     });
