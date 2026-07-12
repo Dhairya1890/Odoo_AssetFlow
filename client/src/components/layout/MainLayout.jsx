@@ -53,7 +53,7 @@ export default function MainLayout() {
               return ['Dashboard', 'Assets', 'Allocations', 'Bookings', 'Maintenance'].includes(item.name);
             }
             if (user?.role === 'asset_manager') {
-              return item.name !== 'Org Setup';
+              return true;
             }
             return true;
           }).map((item) => {

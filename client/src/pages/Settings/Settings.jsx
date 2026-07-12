@@ -7,8 +7,10 @@ import CategoryModal from '../../components/settings/CategoryModal';
 import EmployeeModal from '../../components/settings/EmployeeModal';
 import PasswordModal from '../../components/settings/PasswordModal';
 import EmployeeActionModal from '../../components/settings/EmployeeActionModal';
+import { useAuthStore } from '../../store/authStore';
 
 export default function Settings() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('departments');
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -95,21 +97,23 @@ export default function Settings() {
             </button>
           </nav>
           <div className="pb-3">
-            <button 
-              onClick={() => {
-                setEditData(null);
-                if (activeTab === 'departments') setIsDeptModalOpen(true);
-                else if (activeTab === 'categories') setIsCategoryModalOpen(true);
-                else setIsEmpModalOpen(true);
-              }}
-              className="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all flex items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              <span>
-                {activeTab === 'departments' ? 'New Department' : 
-                 activeTab === 'categories' ? 'New Category' : 'Add Employee'}
-              </span>
-            </button>
+            {((activeTab !== 'departments' && activeTab !== 'directory') || user?.role === 'admin') && (
+              <button 
+                onClick={() => {
+                  setEditData(null);
+                  if (activeTab === 'departments') setIsDeptModalOpen(true);
+                  else if (activeTab === 'categories') setIsCategoryModalOpen(true);
+                  else setIsEmpModalOpen(true);
+                }}
+                className="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>
+                  {activeTab === 'departments' ? 'New Department' : 
+                   activeTab === 'categories' ? 'New Category' : 'Add Employee'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -127,7 +131,7 @@ export default function Settings() {
                     <th className="px-6 py-4 border-b border-outline-variant">Department Name</th>
                     <th className="px-6 py-4 border-b border-outline-variant">Parent Entity</th>
                     <th className="px-6 py-4 border-b border-outline-variant">Department Head</th>
-                    <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>
+                    {user?.role === 'admin' && <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>}
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -147,12 +151,14 @@ export default function Settings() {
                           </div>
                         ) : '—'}
                       </td>
-                      <td className="px-6 py-4 border-b border-outline-variant text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => { setEditData(dept); setIsDeptModalOpen(true); }} className="p-1.5 text-on-surface-variant hover:text-primary"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDeleteDept(dept.id)} className="p-1.5 text-on-surface-variant hover:text-error"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      </td>
+                      {user?.role === 'admin' && (
+                        <td className="px-6 py-4 border-b border-outline-variant text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => { setEditData(dept); setIsDeptModalOpen(true); }} className="p-1.5 text-on-surface-variant hover:text-primary"><Edit2 className="w-4 h-4" /></button>
+                            <button onClick={() => handleDeleteDept(dept.id)} className="p-1.5 text-on-surface-variant hover:text-error"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -215,7 +221,7 @@ export default function Settings() {
                     <th className="px-6 py-4 border-b border-outline-variant">Department</th>
                     <th className="px-6 py-4 border-b border-outline-variant">System Role</th>
                     <th className="px-6 py-4 border-b border-outline-variant">Status</th>
-                    <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>
+                    {user?.role === 'admin' && <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>}
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -251,11 +257,13 @@ export default function Settings() {
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 border-b border-outline-variant text-right">
-                        <button onClick={() => { setEditData(emp); setIsEmpActionModalOpen(true); }} className="p-2 hover:bg-slate-100 rounded-full text-on-surface-variant transition-colors">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                      </td>
+                      {user?.role === 'admin' && (
+                        <td className="px-6 py-4 border-b border-outline-variant text-right">
+                          <button onClick={() => { setEditData(emp); setIsEmpActionModalOpen(true); }} className="p-2 hover:bg-slate-100 rounded-full text-on-surface-variant transition-colors">
+                            <MoreHorizontal className="w-5 h-5" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
