@@ -1,1 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: 'Hanken Grotesk', sans-serif;
+  
+  --color-tertiary-container: #271901;
+  --color-on-secondary-fixed: #0b1c30;
+  --color-inverse-primary: #bec6e0;
+  --color-error-container: #ffdad6;
+  --color-tertiary: #000000;
+  --color-inverse-on-surface: #eff1f3;
+  --color-surface-container: #eceef0;
+  --color-on-secondary: #ffffff;
+  --color-secondary-fixed-dim: #b7c8e1;
+  --color-surface-variant: #e0e3e5;
+  --color-primary: #000000;
+  --color-on-tertiary-container: #98805d;
+  --color-on-primary-fixed: #131b2e;
+  --color-surface-tint: #565e74;
+  --color-on-surface: #191c1e;
+  --color-on-error-container: #93000a;
+  --color-tertiary-fixed-dim: #dec29a;
+  --color-surface-dim: #d8dadc;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-primary-fixed-variant: #3f465c;
+  --color-surface-container-high: #e6e8ea;
+  --color-on-background: #191c1e;
+  --color-on-surface-variant: #45464d;
+  --color-secondary-container: #d0e1fb;
+  --color-primary-fixed-dim: #bec6e0;
+  --color-on-secondary-fixed-variant: #38485d;
+  --color-background: #f7f9fb;
+  --color-on-tertiary-fixed-variant: #574425;
+  --color-error: #ba1a1a;
+  --color-secondary-fixed: #d3e4fe;
+  --color-on-primary: #ffffff;
+  --color-on-error: #ffffff;
+  --color-on-primary-container: #7c839b;
+  --color-surface-container-lowest: #ffffff;
+  --color-outline: #76777d;
+  --color-on-tertiary: #ffffff;
+  --color-primary-fixed: #dae2fd;
+  --color-on-tertiary-fixed: #271901;
+  --color-surface-bright: #f7f9fb;
+  --color-on-secondary-container: #54647a;
+  --color-secondary: #505f76;
+  --color-outline-variant: #c6c6cd;
+  --color-tertiary-fixed: #fcdeb5;
+  --color-inverse-surface: #2d3133;
+  --color-surface: #f7f9fb;
+  --color-primary-container: #131b2e;
+  
+  --radius-card: 12px;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-md: 1rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-stack-lg: 2rem;
+  --spacing-sidebar-expanded: 240px;
+  --spacing-container-padding: 2rem;
+  --spacing-sidebar: 64px;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .hairline-border {
+    border: 0.5px solid #e2e8f0;
+  }
+}

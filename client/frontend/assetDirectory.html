@@ -1,0 +1,490 @@
+<!DOCTYPE html><html lang="en" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#271901",
+                    "on-secondary-fixed": "#0b1c30",
+                    "inverse-primary": "#bec6e0",
+                    "error-container": "#ffdad6",
+                    "tertiary": "#000000",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container": "#eceef0",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "surface-variant": "#e0e3e5",
+                    "primary": "#000000",
+                    "on-tertiary-container": "#98805d",
+                    "on-primary-fixed": "#131b2e",
+                    "surface-tint": "#565e74",
+                    "on-surface": "#191c1e",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed-dim": "#dec29a",
+                    "surface-dim": "#d8dadc",
+                    "surface-container-low": "#f2f4f6",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "surface-container-high": "#e6e8ea",
+                    "on-background": "#191c1e",
+                    "on-surface-variant": "#45464d",
+                    "secondary-container": "#d0e1fb",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#574425",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#7c839b",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#76777d",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#dae2fd",
+                    "on-tertiary-fixed": "#271901",
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary-container": "#54647a",
+                    "secondary": "#505f76",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-fixed": "#fcdeb5",
+                    "inverse-surface": "#2d3133",
+                    "surface": "#f7f9fb",
+                    "primary-container": "#131b2e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "0.5rem",
+                    "stack-md": "1rem",
+                    "gutter": "1.5rem",
+                    "stack-lg": "2rem",
+                    "sidebar-expanded": "240px",
+                    "container-padding": "2rem",
+                    "sidebar-width": "64px"
+            },
+            "fontFamily": {
+                    "label-md": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "display": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "500"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    }catch(_e){}</script><meta charset="utf-8"></head><body class="bg-background text-on-surface antialiased overflow-x-hidden">
+<!-- SideNavBar (Shared Component) -->
+<aside class="flex flex-col fixed left-0 top-0 h-screen z-50 bg-surface dark:bg-inverse-surface border-r border-outline-variant dark:border-outline w-sidebar group hover:w-sidebar-expanded transition-all duration-200 ease-in-out">
+<div class="flex items-center px-4 py-6 overflow-hidden">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary mr-3 text-3xl">corporate_fare</span>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">AssetFlow</h1>
+<p class="text-label-sm text-on-surface-variant">ERP System</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-3">
+<!-- Nav Item: Dashboard -->
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined min-w-[40px] text-center">dashboard</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Dashboard</span>
+</a>
+<!-- Nav Item: Assets (ACTIVE) -->
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-primary dark:text-inverse-primary bg-secondary-container dark:bg-on-secondary-fixed-variant">
+<span class="material-symbols-outlined min-w-[40px] text-center" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Assets</span>
+</a>
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined min-w-[40px] text-center">assignment_ind</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Allocations</span>
+</a>
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined min-w-[40px] text-center">event_available</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Bookings</span>
+</a>
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined min-w-[40px] text-center">build</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Maintenance</span>
+</a>
+<a href="#" class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined min-w-[40px] text-center">fact_check</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Audits</span>
+</a>
+<a class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined min-w-[40px] text-center">analytics</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Reports</span>
+</a>
+<a class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined min-w-[40px] text-center">notifications</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Notifications</span>
+</a>
+<a class="flex items-center p-2 rounded-lg transition-soft text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high" href="#">
+<span class="material-symbols-outlined min-w-[40px] text-center">corporate_fare</span>
+<span class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity font-label-md">Org Setup</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-outline-variant">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a business executive for a corporate software profile. The person is wearing a dark navy blazer over a crisp white shirt, posing against a neutral gray background. The lighting is soft and studio-quality, emphasizing a modern professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOhj6uJLDRVOjhTi5aWHTyZwEC0uHjgG9IPrbb3RiRhxnBV9aJGU6z1ccROVTP8BSnj2TPZyBvuU0VM1sAnJFejG6FKnGHMYLe9KCC-fJVoj7S909IHCDr-nenBp7xeQOzzuh6Xa4GBLixmZvXkhrTmQoLPg0o0Mf_kW9khOkMAbtpO7hBjbUUANOp7HAYPh5Nas7UW5L7dCkN_ZXwzOq73jUw2VMrNjM8P6ua8S69drxB2Sma3HTl">
+</div>
+<div class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
+<p class="font-label-md text-on-surface">Alex Mercer</p>
+<p class="text-xs text-on-surface-variant">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full h-16 px-gutter ml-sidebar bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline fixed top-0 z-40">
+<div class="flex items-center gap-4 flex-1">
+<h2 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary mr-8">AssetFlow ERP</h2>
+<!-- Search Bar (on_left) -->
+<div class="max-w-md w-full relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-body-md focus:outline-none focus:ring-1 focus:ring-primary transition-soft" placeholder="Global search..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="w-8 h-8 rounded-full border border-outline-variant overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A sleek corporate avatar placeholder depicting a stylized user silhouette in light blue and grey tones, set against a clean white background, conveying a high-end enterprise software feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFPDR1sLz-WYn-4lnDL49iACTGJnAldPlW5YpsRz5JRNs89bVuc4hvIt6PQowif4zbgal8wdMMfjZ-ivdzs-mIFLE95_MR-HFvSPOIBjm3AAKiDa7ilQT2un7Viwzrl09uaK2WljdYOHjn7ikL28BAkzxzRxKWbZpS2MG_p96QaLlb9MX_l0AXyFe6vExiRnL08ahuEoZT6ZwV_rvrBeN2Ctr2FhSTMI16qwG58r3QzP6BZXw1KdXq">
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-sidebar pt-16 min-h-screen">
+<div class="p-container-padding">
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-stack-lg">
+<div>
+<h1 class="font-headline-lg text-headline-lg font-bold text-on-surface">Assets</h1>
+<p class="text-body-md text-on-surface-variant">Manage and track your organization's hardware and infrastructure.</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md flex items-center gap-2 transition-soft hover:opacity-90 active:scale-95" onclick="toggleModal('registerModal')">
+<span class="material-symbols-outlined text-xl">add</span>
+                    Register Asset
+                </button>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[200px]">
+<label class="text-label-sm text-on-surface-variant mb-1 block px-1">Quick Search</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">filter_alt</span>
+<input class="w-full pl-9 pr-4 py-2 border-slate-200 rounded-lg text-body-md focus:ring-0 focus:border-primary transition-soft bg-transparent" placeholder="Tag, name, serial..." type="text">
+</div>
+</div>
+<div class="w-48">
+<label class="text-label-sm text-on-surface-variant mb-1 block px-1">Status</label>
+<select class="w-full py-2 border-slate-200 rounded-lg text-body-md focus:ring-0 focus:border-primary transition-soft bg-transparent cursor-pointer">
+<option>All Statuses</option>
+<option>Available</option>
+<option>In Use</option>
+<option>Maintenance</option>
+<option>Retired</option>
+</select>
+</div>
+<div class="w-48">
+<label class="text-label-sm text-on-surface-variant mb-1 block px-1">Category</label>
+<select class="w-full py-2 border-slate-200 rounded-lg text-body-md focus:ring-0 focus:border-primary transition-soft bg-transparent cursor-pointer">
+<option>All Categories</option>
+<option>Hardware</option>
+<option>Vehicles</option>
+<option>Office Furniture</option>
+<option>Infrastructure</option>
+</select>
+</div>
+<div class="w-48">
+<label class="text-label-sm text-on-surface-variant mb-1 block px-1">Department</label>
+<select class="w-full py-2 border-slate-200 rounded-lg text-body-md focus:ring-0 focus:border-primary transition-soft bg-transparent cursor-pointer">
+<option>All Departments</option>
+<option class="">Engineering</option>
+<option class="">Operations</option>
+<option class="">Marketing</option>
+<option class="">Human Resources</option>
+</select>
+</div>
+<div class="pt-5">
+<button class="p-2 border border-slate-200 rounded-lg text-on-surface-variant hover:bg-slate-50 transition-soft">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-slate-100 bg-slate-50/50">
+<th class="p-4 font-label-md text-on-surface-variant">Asset Tag</th>
+<th class="p-4 font-label-md text-on-surface-variant">Name</th>
+<th class="p-4 font-label-md text-on-surface-variant">Category</th>
+<th class="p-4 font-label-md text-on-surface-variant">Status</th>
+<th class="p-4 font-label-md text-on-surface-variant">Location</th>
+<th class="p-4 font-label-md text-on-surface-variant">Department</th>
+<th class="p-4 font-label-md text-on-surface-variant">Condition</th>
+<th class="p-4 font-label-md text-on-surface-variant">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100">
+<!-- Row 1 -->
+<tr class="asset-table-row transition-soft group">
+<td class="p-4">
+<span class="font-mono text-xs font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">AS-10492</span>
+</td>
+<td class="p-4 font-label-md text-on-surface">MacBook Pro 16" (M3)</td>
+<td class="p-4 text-body-md text-on-surface-variant">Hardware / IT</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        Available
+                                    </span>
+</td>
+<td class="p-4 text-body-md text-on-surface-variant">Main Hub, Room 402</td>
+<td class="p-4 text-body-md text-on-surface-variant">Engineering</td>
+<td class="p-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Excellent
+                                    </span>
+</td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-soft">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="asset-table-row transition-soft group">
+<td class="p-4">
+<span class="font-mono text-xs font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">VH-49201</span>
+</td>
+<td class="p-4 font-label-md text-on-surface">Tesla Model 3 - Silver</td>
+<td class="p-4 text-body-md text-on-surface-variant">Vehicles</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                        In Use
+                                    </span>
+</td>
+<td class="p-4 text-body-md text-on-surface-variant">Parking Lot B</td>
+<td class="p-4 text-body-md text-on-surface-variant">Operations</td>
+<td class="p-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Good
+                                    </span>
+</td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-soft">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="asset-table-row transition-soft group">
+<td class="p-4">
+<span class="font-mono text-xs font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">FU-22019</span>
+</td>
+<td class="p-4 font-label-md text-on-surface">Executive Desk (Walnut)</td>
+<td class="p-4 text-body-md text-on-surface-variant">Office Furniture</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                        Maintenance
+                                    </span>
+</td>
+<td class="p-4 text-body-md text-on-surface-variant">Headquarters Floor 2</td>
+<td class="p-4 text-body-md text-on-surface-variant">Marketing</td>
+<td class="p-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Fair
+                                    </span>
+</td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-soft">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="asset-table-row transition-soft group">
+<td class="p-4">
+<span class="font-mono text-xs font-bold px-2 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">AS-10221</span>
+</td>
+<td class="p-4 font-label-md text-on-surface">Dell UltraSharp 32" 4K</td>
+<td class="p-4 text-body-md text-on-surface-variant">Hardware / IT</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        Available
+                                    </span>
+</td>
+<td class="p-4 text-body-md text-on-surface-variant">Storage Locker 12</td>
+<td class="p-4 text-body-md text-on-surface-variant">Engineering</td>
+<td class="p-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Excellent
+                                    </span>
+</td>
+<td class="p-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-soft">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
+<p class="text-label-sm text-on-surface-variant">Showing 1 to 4 of 124 assets</p>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 border border-slate-200 rounded-md text-label-sm hover:bg-white transition-soft disabled:opacity-50">Previous</button>
+<button class="px-3 py-1.5 border border-slate-200 rounded-md text-label-sm hover:bg-white transition-soft">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Registration Modal -->
+<div class="fixed inset-0 z-[100] hidden items-center justify-center p-4" id="registerModal">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleModal('registerModal')"></div>
+<!-- Modal Content -->
+<div class="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 scale-95 opacity-0 modal-animate">
+<div class="p-6 border-b border-slate-100 flex justify-between items-center">
+<div>
+<h3 class="font-headline-md text-headline-md font-bold text-on-surface">Register New Asset</h3>
+<p class="text-body-md text-on-surface-variant">Enter asset details to add it to the system.</p>
+</div>
+<button class="p-2 hover:bg-slate-100 rounded-full transition-soft" onclick="toggleModal('registerModal')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Asset Name</label>
+<input class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md" placeholder="e.g. Sony A7IV Camera" type="text">
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Category</label>
+<select class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md">
+<option>Select category</option>
+<option>Hardware</option>
+<option>Software</option>
+<option>Furniture</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Serial Number</label>
+<input class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md font-mono" placeholder="SN-XXXX-XXXX" type="text">
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Acquisition Date</label>
+<input class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md" type="date">
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Cost (USD)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+<input class="w-full pl-7 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md" placeholder="0.00" type="number">
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Condition</label>
+<select class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md">
+<option>Excellent</option>
+<option>Good</option>
+<option>Fair</option>
+<option>Poor</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Location</label>
+<input class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md" placeholder="e.g. Warehouse A, Bay 4" type="text">
+</div>
+<div class="space-y-1.5">
+<label class="text-label-md text-on-surface">Department</label>
+<select class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-soft text-body-md">
+<option>Marketing</option>
+<option>Sales</option>
+<option>IT</option>
+</select>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+<div>
+<p class="font-label-md text-on-surface">Bookable Asset</p>
+<p class="text-xs text-on-surface-variant">Allow employees to reserve this asset via the app.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value="">
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</form>
+<div class="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+<button class="px-6 py-2 border border-slate-200 rounded-lg font-label-md hover:bg-white transition-soft" onclick="toggleModal('registerModal')">Cancel</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md transition-soft hover:opacity-90">Confirm Registration</button>
+</div>
+</div>
+</div>
+<script>
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-animate');
+            
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            } else {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        // Add subtle animation to navigation hover
+        const navItems = document.querySelectorAll('nav a');
+        navItems.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                const icon = item.querySelector('.material-symbols-outlined');
+                if (!item.classList.contains('bg-secondary-container')) {
+                    icon.style.transform = 'scale(1.1)';
+                }
+            });
+            item.addEventListener('mouseleave', () => {
+                const icon = item.querySelector('.material-symbols-outlined');
+                icon.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+
+</body></html>

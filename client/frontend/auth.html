@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AssetFlow - Authentication</title>
+<!-- Google Fonts: Hanken Grotesk -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#271901",
+                        "on-secondary-fixed": "#0b1c30",
+                        "inverse-primary": "#bec6e0",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#000000",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container": "#eceef0",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "surface-variant": "#e0e3e5",
+                        "primary": "#000000",
+                        "on-tertiary-container": "#98805d",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-tint": "#565e74",
+                        "on-surface": "#191c1e",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#dec29a",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-container-high": "#e6e8ea",
+                        "on-background": "#191c1e",
+                        "on-surface-variant": "#45464d",
+                        "secondary-container": "#d0e1fb",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed-variant": "#574425",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#76777d",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#dae2fd",
+                        "on-tertiary-fixed": "#271901",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#54647a",
+                        "secondary": "#505f76",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary-fixed": "#fcdeb5",
+                        "inverse-surface": "#2d3133",
+                        "surface": "#f7f9fb",
+                        "primary-container": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "card": "12px"
+                    },
+                    "spacing": {
+                        "stack-sm": "0.5rem",
+                        "stack-md": "1rem",
+                        "gutter": "1.5rem",
+                        "stack-lg": "2rem",
+                        "sidebar-expanded": "240px",
+                        "container-padding": "2rem",
+                        "sidebar-width": "64px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "500"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .hairline-border {
+            border: 0.5px solid #e2e8f0;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .auth-card {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .hidden-card {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+<!-- Subtle Background Detail (Non-image decorative element) -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden opacity-30">
+<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-secondary-container blur-[120px]"></div>
+<div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary-fixed blur-[120px]"></div>
+</div>
+<!-- Login Section -->
+<main class="auth-card w-full max-w-[400px] z-10" id="login-container">
+<div class="bg-surface-container-lowest hairline-border rounded-card p-8 flex flex-col gap-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-primary flex items-center justify-center rounded-lg mb-2">
+<span class="material-symbols-outlined text-white text-3xl">inventory_2</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface">AssetFlow</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Sign in to manage your ecosystem</p>
+</div>
+<form class="flex flex-col gap-5" onsubmit="event.preventDefault();">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant" for="login-email">Email address</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="login-email" placeholder="name@company.com" type="email"/>
+</div>
+<div class="flex flex-col gap-1.5 text-right">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface-variant" for="login-password">Password</label>
+<a class="font-label-sm text-label-sm text-on-secondary-container hover:underline" href="#">Forgot password?</a>
+</div>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="login-password" placeholder="••••••••" type="password"/>
+</div>
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md hover:bg-on-surface-variant transition-all mt-2 active:scale-[0.98]" type="submit">
+                    Sign in
+                </button>
+</form>
+<div class="flex flex-col items-center gap-4">
+<div class="w-full flex items-center gap-4">
+<div class="flex-1 hairline-border border-t"></div>
+<span class="font-label-sm text-label-sm text-outline">or</span>
+<div class="flex-1 hairline-border border-t"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    New to AssetFlow? 
+                    <button class="text-primary font-label-md hover:underline" onclick="toggleAuth('signup')">Create an account</button>
+</p>
+</div>
+</div>
+<footer class="mt-8 flex justify-center gap-6 opacity-60">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" href="#">Terms</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" href="#">Help</a>
+</footer>
+</main>
+<!-- Signup Section -->
+<main class="auth-card hidden-card w-full max-w-[440px] z-10" id="signup-container">
+<div class="bg-surface-container-lowest hairline-border rounded-card p-8 flex flex-col gap-8">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 bg-primary flex items-center justify-center rounded-lg mb-2">
+<span class="material-symbols-outlined text-white text-3xl">corporate_fare</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Create your account</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Join 2,000+ organizations scaling with AssetFlow</p>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-5" onsubmit="event.preventDefault();">
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface-variant" for="signup-name">Full name</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="signup-name" placeholder="John Doe" type="text"/>
+</div>
+<div class="flex flex-col gap-1.5 md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface-variant" for="signup-email">Work email</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="signup-email" placeholder="john@company.com" type="email"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant" for="signup-password">Password</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="signup-password" placeholder="••••••••" type="password"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant" for="signup-confirm">Confirm password</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low hairline-border rounded-lg font-body-md text-body-md focus:outline-none focus:border-primary transition-colors" id="signup-confirm" placeholder="••••••••" type="password"/>
+</div>
+<div class="md:col-span-2 mt-2">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md hover:bg-on-surface-variant transition-all active:scale-[0.98]" type="submit">
+                        Create account
+                    </button>
+</div>
+</form>
+<div class="flex flex-col items-center gap-4">
+<p class="font-body-md text-body-md text-on-surface-variant text-center">
+                    By signing up, you agree to our 
+                    <a class="text-primary font-label-md hover:underline" href="#">Terms of Service</a>
+</p>
+<div class="w-full hairline-border border-t"></div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Already have an account? 
+                    <button class="text-primary font-label-md hover:underline" onclick="toggleAuth('login')">Log in</button>
+</p>
+</div>
+</div>
+<footer class="mt-8 flex justify-center gap-6 opacity-60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">SOC2 Type II Certified</span>
+</div>
+</footer>
+</main>
+<script>
+        /**
+         * Simple Micro-interaction: Toggle between Login and Signup with CSS transitions
+         */
+        function toggleAuth(view) {
+            const login = document.getElementById('login-container');
+            const signup = document.getElementById('signup-container');
+            
+            if (view === 'signup') {
+                // Fade out login
+                login.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    login.classList.add('hidden-card');
+                    signup.classList.remove('hidden-card');
+                    // Force reflow for animation
+                    void signup.offsetWidth;
+                    signup.classList.remove('opacity-0', 'translate-y-2');
+                }, 300);
+            } else {
+                // Fade out signup
+                signup.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    signup.classList.add('hidden-card');
+                    login.classList.remove('hidden-card');
+                    // Force reflow for animation
+                    void login.offsetWidth;
+                    login.classList.remove('opacity-0', 'translate-y-2');
+                }, 300);
+            }
+        }
+
+        // Add subtle focus effect to inputs via JS for high-end feel
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+                input.parentElement.style.transition = 'transform 0.2s ease-out';
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+    </script>
+</body></html>
