@@ -58,3 +58,25 @@ exports.updateDepartmentStatus = async (req, res) => {
     return error(res, err.message);
   }
 };
+
+exports.deleteDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Asset, User } = require('../models');
+
+    // Check if any assets or users belong to this department
+    const assetCount = await Asset.count({ where: { departmentId: id } });
+    if (assetCount > 0) return error(res, 'Cannot delete department: Assets are assigned to it.', 400);
+    
+    const userCount = await User.count({ where: { departmentId: id } });
+    if (userCount > 0) return error(res, 'Cannot delete department: Users are assigned to it.', 400);
+
+    const dept = await Department.findByPk(id);
+    if (!dept) return error(res, 'Department not found', 404);
+
+    await dept.destroy();
+    return ok(res, 'Department deleted successfully');
+  } catch (err) {
+    return error(res, err.message);
+  }
+};

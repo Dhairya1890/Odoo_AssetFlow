@@ -6,6 +6,7 @@ const requireRole = require('../middleware/role.middleware');
 router.use(auth);
 router.get('/', ctrl.listCategories);
 router.post('/', requireRole('admin', 'asset_manager'), ctrl.createCategory);
-router.patch('/:id', requireRole('admin', 'asset_manager'), ctrl.updateCategory);
+router.put('/:id', requireRole('admin', 'asset_manager'), ctrl.updateCategory);
+router.delete('/:id', requireRole('admin', 'asset_manager'), ctrl.deleteCategory);
 
 module.exports = router;

@@ -36,3 +36,21 @@ exports.updateCategory = async (req, res) => {
     return error(res, err.message);
   }
 };
+
+exports.deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Asset } = require('../models');
+
+    const assetCount = await Asset.count({ where: { categoryId: id } });
+    if (assetCount > 0) return error(res, 'Cannot delete category: Assets are assigned to it.', 400);
+
+    const category = await AssetCategory.findByPk(id);
+    if (!category) return error(res, 'Category not found', 404);
+
+    await category.destroy();
+    return ok(res, 'Category deleted successfully');
+  } catch (err) {
+    return error(res, err.message);
+  }
+};

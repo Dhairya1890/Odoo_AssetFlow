@@ -1,9 +1,73 @@
-import { useState } from 'react';
-import { Plus, Search, HelpCircle, Bell, Settings as SettingsIcon, Users, Network, BoxSelect } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Settings as SettingsIcon, Edit2, Trash2, MoreHorizontal } from 'lucide-react';
 import apiClient from '../../api/client';
+import toast from 'react-hot-toast';
+import DepartmentModal from '../../components/settings/DepartmentModal';
+import CategoryModal from '../../components/settings/CategoryModal';
+import EmployeeModal from '../../components/settings/EmployeeModal';
+import PasswordModal from '../../components/settings/PasswordModal';
+import EmployeeActionModal from '../../components/settings/EmployeeActionModal';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('departments');
+  const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
+
+  // Modals state
+  const [isDeptModalOpen, setIsDeptModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isEmpModalOpen, setIsEmpModalOpen] = useState(false);
+  const [isPassModalOpen, setIsPassModalOpen] = useState(false);
+  const [isEmpActionModalOpen, setIsEmpActionModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await apiClient.get('/departments');
+      setDepartments(res.data.data.departments || []);
+    } catch (err) { toast.error('Failed to load departments'); }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await apiClient.get('/categories');
+      setCategories(res.data.data.categories || []);
+    } catch (err) { toast.error('Failed to load categories'); }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await apiClient.get('/users');
+      setUsers(res.data.data.users || []);
+    } catch (err) { toast.error('Failed to load employees'); }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'departments') { fetchDepartments(); fetchUsers(); }
+    if (activeTab === 'categories') fetchCategories();
+    if (activeTab === 'directory') { fetchUsers(); fetchDepartments(); }
+  }, [activeTab]);
+
+  const handleDeleteDept = async (id) => {
+    if (window.confirm('Delete this department?')) {
+      try {
+        await apiClient.delete(`/departments/${id}`);
+        toast.success('Department deleted');
+        fetchDepartments();
+      } catch (err) { toast.error(err.response?.data?.message || 'Failed to delete'); }
+    }
+  };
+
+  const handleDeleteCat = async (id) => {
+    if (window.confirm('Delete this category?')) {
+      try {
+        await apiClient.delete(`/categories/${id}`);
+        toast.success('Category deleted');
+        fetchCategories();
+      } catch (err) { toast.error(err.response?.data?.message || 'Failed to delete'); }
+    }
+  };
 
   return (
     <div className="p-container-padding space-y-stack-lg min-h-screen">
@@ -31,11 +95,19 @@ export default function Settings() {
             </button>
           </nav>
           <div className="pb-3">
-            <button className="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all flex items-center gap-2">
+            <button 
+              onClick={() => {
+                setEditData(null);
+                if (activeTab === 'departments') setIsDeptModalOpen(true);
+                else if (activeTab === 'categories') setIsCategoryModalOpen(true);
+                else setIsEmpModalOpen(true);
+              }}
+              className="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-all flex items-center gap-2"
+            >
               <Plus className="w-5 h-5" />
               <span>
                 {activeTab === 'departments' ? 'New Department' : 
-                 activeTab === 'categories' ? 'New Category' : 'Invite Employee'}
+                 activeTab === 'categories' ? 'New Category' : 'Add Employee'}
               </span>
             </button>
           </div>
@@ -55,29 +127,31 @@ export default function Settings() {
                     <th className="px-6 py-4 border-b border-outline-variant">Department Name</th>
                     <th className="px-6 py-4 border-b border-outline-variant">Parent Entity</th>
                     <th className="px-6 py-4 border-b border-outline-variant">Department Head</th>
-                    <th className="px-6 py-4 border-b border-outline-variant text-right">Members</th>
                     <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {[
-                    { name: 'Executive Office', parent: '—', head: 'Helena Smith', initials: 'HS', count: 12 },
-                    { name: 'Engineering', parent: 'Operations', head: 'Marcus Jensen', initials: 'MJ', count: 145 },
-                    { name: 'Product Design', parent: 'Engineering', head: 'Aria Lo', initials: 'AL', count: 24 },
-                    { name: 'Marketing', parent: 'Growth', head: 'David Ray', initials: 'DR', count: 38 },
-                  ].map(dept => (
-                    <tr key={dept.name} className="hover:bg-surface-container-low transition-colors duration-150">
+                  {departments.length === 0 ? (
+                    <tr><td colSpan="4" className="text-center p-6 text-on-surface-variant">No departments found</td></tr>
+                  ) : departments.map(dept => (
+                    <tr key={dept.id} className="hover:bg-surface-container-low transition-colors duration-150">
                       <td className="px-6 py-4 border-b border-outline-variant font-bold text-primary">{dept.name}</td>
-                      <td className="px-6 py-4 border-b border-outline-variant text-on-surface-variant">{dept.parent}</td>
+                      <td className="px-6 py-4 border-b border-outline-variant text-on-surface-variant">{dept.parent?.name || '—'}</td>
                       <td className="px-6 py-4 border-b border-outline-variant">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-[10px] font-bold text-on-secondary-container">{dept.initials}</div>
-                          <span>{dept.head}</span>
-                        </div>
+                        {dept.head ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-[10px] font-bold text-on-secondary-container">
+                              {dept.head.name.split(' ').map(n=>n[0]).join('')}
+                            </div>
+                            <span>{dept.head.name}</span>
+                          </div>
+                        ) : '—'}
                       </td>
-                      <td className="px-6 py-4 border-b border-outline-variant text-right text-on-surface-variant">{dept.count}</td>
                       <td className="px-6 py-4 border-b border-outline-variant text-right">
-                        <button className="text-on-surface-variant hover:text-primary transition-colors"><SettingsIcon className="w-4 h-4 inline" /></button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => { setEditData(dept); setIsDeptModalOpen(true); }} className="p-1.5 text-on-surface-variant hover:text-primary"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteDept(dept.id)} className="p-1.5 text-on-surface-variant hover:text-error"><Trash2 className="w-4 h-4" /></button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -90,54 +164,41 @@ export default function Settings() {
         {/* ASSET CATEGORIES TAB */}
         {activeTab === 'categories' && (
           <section className="animate-in fade-in duration-300">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
-              <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm h-fit">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low text-on-surface-variant text-xs uppercase font-medium">
-                      <th className="px-6 py-4 border-b border-outline-variant">Category Name</th>
-                      <th className="px-6 py-4 border-b border-outline-variant">Custom Fields</th>
-                      <th className="px-6 py-4 border-b border-outline-variant text-right">Asset Count</th>
-                      <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-surface-container-low text-on-surface-variant text-xs uppercase font-medium">
+                    <th className="px-6 py-4 border-b border-outline-variant">Category Name</th>
+                    <th className="px-6 py-4 border-b border-outline-variant">Custom Fields</th>
+                    <th className="px-6 py-4 border-b border-outline-variant text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {categories.length === 0 ? (
+                    <tr><td colSpan="3" className="text-center p-6 text-on-surface-variant">No categories found</td></tr>
+                  ) : categories.map(cat => (
+                    <tr key={cat.id} className="hover:bg-surface-container-low transition-colors duration-150">
+                      <td className="px-6 py-4 border-b border-outline-variant font-bold text-primary">{cat.name}</td>
+                      <td className="px-6 py-4 border-b border-outline-variant">
+                        <div className="flex flex-wrap gap-1">
+                          {(cat.customFields || []).map((f, i) => {
+                            const fieldName = typeof f === 'string' ? f : (f.name || JSON.stringify(f));
+                            return (
+                              <span key={i} className="bg-surface-container px-2 py-0.5 rounded text-[11px] border border-outline-variant">{fieldName}</span>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 border-b border-outline-variant text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => { setEditData(cat); setIsCategoryModalOpen(true); }} className="p-1.5 text-on-surface-variant hover:text-primary"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteCat(cat.id)} className="p-1.5 text-on-surface-variant hover:text-error"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {[
-                      { name: 'Computing Hardware', fields: ['Serial Number', 'Processor', 'RAM'], count: '1,204' },
-                      { name: 'Fleet Vehicles', fields: ['License Plate', 'VIN', 'Last Service'], count: '85' },
-                      { name: 'Office Furniture', fields: ['Location', 'Material'], count: '450' },
-                    ].map(cat => (
-                      <tr key={cat.name} className="hover:bg-surface-container-low transition-colors duration-150">
-                        <td className="px-6 py-4 border-b border-outline-variant font-bold text-primary">{cat.name}</td>
-                        <td className="px-6 py-4 border-b border-outline-variant">
-                          <div className="flex flex-wrap gap-1">
-                            {cat.fields.map(f => (
-                              <span key={f} className="bg-surface-container px-2 py-0.5 rounded text-[11px] border border-outline-variant">{f}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 border-b border-outline-variant text-right text-on-surface-variant">{cat.count}</td>
-                        <td className="px-6 py-4 border-b border-outline-variant text-right">
-                          <button className="text-on-surface-variant hover:text-primary"><SettingsIcon className="w-4 h-4 inline" /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Quick Add Category Card */}
-              <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6">
-                <h3 className="text-lg font-bold mb-4 text-primary">Schema Definition</h3>
-                <p className="text-sm text-on-surface-variant mb-6">Select a category to modify its metadata schema or add global custom fields to the system asset log.</p>
-                <div className="space-y-4">
-                  <div className="p-4 bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm">
-                    <span className="text-sm font-bold block mb-1">Global Fields</span>
-                    <p className="text-xs text-on-surface-variant">Asset ID, Purchase Date, Warranty Expiry, Tag Status.</p>
-                  </div>
-                  <button className="w-full py-2 border border-primary text-primary text-sm font-medium rounded-lg hover:bg-primary hover:text-on-primary transition-all">Configure Fields</button>
-                </div>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </section>
         )}
@@ -145,22 +206,6 @@ export default function Settings() {
         {/* EMPLOYEE DIRECTORY TAB */}
         {activeTab === 'directory' && (
           <section className="animate-in fade-in duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex gap-4">
-                <select className="bg-surface border border-outline-variant rounded-lg px-4 py-1.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                  <option>All Departments</option>
-                  <option>Engineering</option>
-                  <option>Product Design</option>
-                </select>
-                <select className="bg-surface border border-outline-variant rounded-lg px-4 py-1.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                  <option>All Roles</option>
-                  <option>Admin</option>
-                  <option>Manager</option>
-                  <option>Staff</option>
-                </select>
-              </div>
-            </div>
-
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -174,42 +219,41 @@ export default function Settings() {
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {[
-                    { name: 'Sarah Connor', email: 's.connor@assetflow.com', dept: 'Operations', role: 'Admin', status: 'Active' },
-                    { name: 'Robert Draper', email: 'r.draper@assetflow.com', dept: 'Engineering', role: 'Staff', status: 'Active' },
-                    { name: 'Alex Kamal', email: 'a.kamal@assetflow.com', dept: 'Logistics', role: 'Manager', status: 'Inactive' },
-                  ].map((emp, idx) => (
-                    <tr key={idx} className="hover:bg-surface-container-low transition-colors duration-150">
+                  {users.length === 0 ? (
+                    <tr><td colSpan="6" className="text-center p-6 text-on-surface-variant">No employees found</td></tr>
+                  ) : users.map(emp => (
+                    <tr key={emp.id} className="hover:bg-surface-container-low transition-colors duration-150">
                       <td className="px-6 py-4 border-b border-outline-variant">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs">{emp.name.split(' ').map(n=>n[0]).join('')}</div>
+                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs">
+                            {emp.name.split(' ').map(n=>n[0]).join('')}
+                          </div>
                           <span className="font-bold text-primary">{emp.name}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 border-b border-outline-variant text-on-surface-variant">{emp.email}</td>
-                      <td className="px-6 py-4 border-b border-outline-variant">{emp.dept}</td>
+                      <td className="px-6 py-4 border-b border-outline-variant">{emp.department?.name || '—'}</td>
                       <td className="px-6 py-4 border-b border-outline-variant">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          emp.role === 'Admin' ? 'bg-on-primary-fixed-variant text-white' : 
+                          emp.role === 'admin' ? 'bg-on-primary-fixed-variant text-white' : 
                           'bg-surface-container text-on-surface-variant'
                         }`}>
-                          {emp.role}
+                          {emp.role.replace('_', ' ')}
                         </span>
                       </td>
                       <td className="px-6 py-4 border-b border-outline-variant">
                         <span className={`flex items-center gap-1.5 text-xs font-bold ${
-                          emp.status === 'Active' ? 'text-emerald-600' : 'text-on-surface-variant opacity-60'
+                          emp.status === 'active' ? 'text-emerald-600' : 'text-on-surface-variant opacity-60'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${
-                            emp.status === 'Active' ? 'bg-emerald-600' : 'bg-on-surface-variant'
+                            emp.status === 'active' ? 'bg-emerald-600' : 'bg-on-surface-variant'
                           }`}></span> 
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 border-b border-outline-variant text-right space-x-3">
-                        <button className="text-xs font-bold text-on-surface-variant hover:text-primary underline">Promote Role</button>
-                        <button className={`text-xs font-bold ${emp.status === 'Active' ? 'text-error hover:text-error-container' : 'text-primary hover:text-secondary'}`}>
-                          {emp.status === 'Active' ? 'Deactivate' : 'Activate'}
+                      <td className="px-6 py-4 border-b border-outline-variant text-right">
+                        <button onClick={() => { setEditData(emp); setIsEmpActionModalOpen(true); }} className="p-2 hover:bg-slate-100 rounded-full text-on-surface-variant transition-colors">
+                          <MoreHorizontal className="w-5 h-5" />
                         </button>
                       </td>
                     </tr>
@@ -220,6 +264,12 @@ export default function Settings() {
           </section>
         )}
       </div>
+
+      <DepartmentModal isOpen={isDeptModalOpen} onClose={() => setIsDeptModalOpen(false)} onSuccess={fetchDepartments} editData={editData} departments={departments} users={users} />
+      <CategoryModal isOpen={isCategoryModalOpen} onClose={() => setIsCategoryModalOpen(false)} onSuccess={fetchCategories} editData={editData} />
+      <EmployeeModal isOpen={isEmpModalOpen} onClose={() => setIsEmpModalOpen(false)} onSuccess={fetchUsers} departments={departments} />
+      <EmployeeActionModal isOpen={isEmpActionModalOpen} onClose={() => setIsEmpActionModalOpen(false)} user={editData} onSuccess={fetchUsers} onOpenPasswordModal={() => setIsPassModalOpen(true)} />
+      <PasswordModal isOpen={isPassModalOpen} onClose={() => setIsPassModalOpen(false)} user={editData} />
     </div>
   );
 }

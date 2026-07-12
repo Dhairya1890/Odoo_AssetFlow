@@ -7,6 +7,7 @@ router.use(auth);
 router.get('/', ctrl.listDepartments);
 router.post('/', requireRole('admin'), ctrl.createDepartment);
 router.patch('/:id/status', requireRole('admin'), ctrl.updateDepartmentStatus);
-router.patch('/:id', requireRole('admin'), ctrl.updateDepartment);
+router.put('/:id', requireRole('admin'), ctrl.updateDepartment);
+router.delete('/:id', requireRole('admin'), ctrl.deleteDepartment);
 
 module.exports = router;
