@@ -7,11 +7,11 @@ exports.utilization = async (req, res) => {
   try {
     const rows = await Asset.findAll({
       attributes: [
-        'status',
+        [sequelize.col('Asset.status'), 'status'],
         [sequelize.fn('COUNT', sequelize.col('Asset.id')), 'count'],
       ],
       include: [{ model: AssetCategory, as: 'category', attributes: ['id', 'name'] }],
-      group: ['status', 'category.id', 'category.name'],
+      group: ['Asset.status', 'category.id', 'category.name'],
       raw: true,
     });
     return ok(res, 'Utilization report', { rows });
@@ -28,7 +28,7 @@ exports.maintenanceFrequency = async (req, res) => {
         [sequelize.fn('COUNT', sequelize.col('MaintenanceRequest.id')), 'count'],
       ],
       include: [{ model: Asset, as: 'asset', attributes: ['id', 'assetTag', 'name'] }],
-      group: ['assetId', 'asset.id'],
+      group: ['assetId', 'asset.id', 'asset.assetTag', 'asset.name'],
       order: [[sequelize.literal('count'), 'DESC']],
       raw: false,
     });
@@ -43,11 +43,11 @@ exports.departmentSummary = async (req, res) => {
     const rows = await Asset.findAll({
       attributes: [
         'departmentId',
-        'status',
+        [sequelize.col('Asset.status'), 'status'],
         [sequelize.fn('COUNT', sequelize.col('Asset.id')), 'count'],
       ],
       include: [{ model: Department, as: 'department', attributes: ['id', 'name'] }],
-      group: ['departmentId', 'status', 'department.id', 'department.name'],
+      group: ['departmentId', 'Asset.status', 'department.id', 'department.name'],
       raw: false,
     });
     return ok(res, 'Department summary report', { rows });
