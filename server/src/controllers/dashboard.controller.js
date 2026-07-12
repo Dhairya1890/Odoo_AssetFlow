@@ -11,7 +11,7 @@ exports.getDashboardKPIs = async (req, res) => {
 
     const isEmployee = req.user.role === 'employee';
     const userAllocWhere = isEmployee ? { userId: req.user.id } : {};
-    const userBookingWhere = isEmployee ? { userId: req.user.id, status: { [Op.in]: ['upcoming', 'ongoing'] } } : { status: { [Op.in]: ['upcoming', 'ongoing'] } };
+    const userBookingWhere = isEmployee ? { userId: req.user.id, status: { [Op.in]: ['pending', 'ongoing'] } } : { status: { [Op.in]: ['pending', 'ongoing'] } };
     const userMaintWhere = isEmployee ? { raisedById: req.user.id, createdAt: { [Op.between]: [todayStart, todayEnd] } } : { createdAt: { [Op.between]: [todayStart, todayEnd] } };
 
     const [

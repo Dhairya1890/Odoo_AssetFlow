@@ -17,7 +17,7 @@ const startBookingReminder = () => {
 
       const upcomingBookings = await Booking.findAll({
         where: {
-          status: 'upcoming',
+          status: 'approved',
           startTime: {
             [Op.gte]: oneHourFromNowStart,
             [Op.lt]: oneHourFromNowEnd,
