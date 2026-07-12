@@ -1,25 +1,73 @@
 import { useState, useEffect } from 'react';
 import { Plus, Filter, MoreVertical, X, Search, SlidersHorizontal } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import apiClient from '../../api/client';
 
 export default function Assets() {
   const [assets, setAssets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm();
+
+  const fetchAssets = async () => {
+    try {
+      const response = await apiClient.get('/assets');
+      setAssets(response.data?.data?.assets || []);
+    } catch (error) {
+      console.error('Failed to fetch assets:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchAssets = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiClient.get('/assets');
-        setAssets(response.data?.data?.assets || []);
+        setLoading(true);
+        const [assetsRes, catsRes, depsRes] = await Promise.all([
+          apiClient.get('/assets'),
+          apiClient.get('/categories'),
+          apiClient.get('/departments')
+        ]);
+        setAssets(assetsRes.data?.data?.assets || []);
+        setCategories(catsRes.data?.data?.categories || []);
+        setDepartments(depsRes.data?.data?.departments || []);
       } catch (error) {
-        console.error('Failed to fetch assets:', error);
+        console.error('Failed to fetch data:', error);
+        toast.error('Failed to load asset data');
       } finally {
         setLoading(false);
       }
     };
-    fetchAssets();
+    fetchData();
   }, []);
+
+  const onSubmit = async (data) => {
+    try {
+      const payload = {
+        name: data.name,
+        categoryId: parseInt(data.categoryId),
+        serialNumber: data.serialNumber || undefined,
+        acquisitionDate: data.acquisitionDate || undefined,
+        acquisitionCost: data.acquisitionCost ? parseFloat(data.acquisitionCost) : undefined,
+        condition: data.condition.toLowerCase(),
+        location: data.location || undefined,
+        departmentId: data.departmentId ? parseInt(data.departmentId) : undefined,
+        isBookable: data.isBookable
+      };
+      
+      await apiClient.post('/assets', payload);
+      toast.success('Asset registered successfully!');
+      setIsModalOpen(false);
+      reset();
+      fetchAssets();
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(error.response?.data?.message || 'Failed to register asset');
+    }
+  };
 
   return (
     <div className="p-container-padding">
@@ -180,28 +228,33 @@ export default function Assets() {
               </button>
             </div>
             
-            <form className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <form id="register-asset-form" onSubmit={handleSubmit(onSubmit, (err) => console.log('Validation errors:', err))} className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-on-surface">Asset Name</label>
+                  <label className="text-sm font-medium text-on-surface">Asset Name*</label>
                   <input 
+                    {...register('name', { required: true })}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm" 
                     placeholder="e.g. Sony A7IV Camera" 
                     type="text" 
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-on-surface">Category</label>
-                  <select className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent">
-                    <option>Select category</option>
-                    <option>Hardware</option>
-                    <option>Software</option>
-                    <option>Furniture</option>
+                  <label className="text-sm font-medium text-on-surface">Category*</label>
+                  <select 
+                    {...register('categoryId', { required: true })}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent"
+                  >
+                    <option value="">Select category</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-on-surface">Serial Number</label>
                   <input 
+                    {...register('serialNumber')}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-mono" 
                     placeholder="SN-XXXX-XXXX" 
                     type="text" 
@@ -210,6 +263,7 @@ export default function Assets() {
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-on-surface">Acquisition Date</label>
                   <input 
+                    {...register('acquisitionDate')}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm" 
                     type="date" 
                   />
@@ -219,24 +273,30 @@ export default function Assets() {
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
                     <input 
+                      {...register('acquisitionCost')}
                       className="w-full pl-7 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm" 
                       placeholder="0.00" 
-                      type="number" 
+                      type="number"
+                      step="0.01"
                     />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-on-surface">Condition</label>
-                  <select className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent">
-                    <option>Excellent</option>
-                    <option>Good</option>
-                    <option>Fair</option>
-                    <option>Poor</option>
+                  <select 
+                    {...register('condition')}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent"
+                  >
+                    <option value="new">New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-on-surface">Location</label>
                   <input 
+                    {...register('location')}
                     className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm" 
                     placeholder="e.g. Warehouse A, Bay 4" 
                     type="text" 
@@ -244,10 +304,14 @@ export default function Assets() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-on-surface">Department</label>
-                  <select className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent">
-                    <option>Marketing</option>
-                    <option>Sales</option>
-                    <option>IT</option>
+                  <select 
+                    {...register('departmentId')}
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-sm appearance-none bg-transparent"
+                  >
+                    <option value="">Select department (Optional)</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -258,7 +322,7 @@ export default function Assets() {
                   <p className="text-xs text-on-surface-variant mt-0.5">Allow employees to reserve this asset via the app.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" className="sr-only peer" />
+                  <input type="checkbox" {...register('isBookable')} className="sr-only peer" />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
@@ -268,11 +332,17 @@ export default function Assets() {
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="px-6 py-2 border border-slate-200 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+                type="button"
               >
                 Cancel
               </button>
-              <button className="px-6 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium transition-colors hover:opacity-90">
-                Confirm Registration
+              <button 
+                type="submit"
+                form="register-asset-form"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-primary text-on-primary rounded-lg text-sm font-medium transition-colors hover:opacity-90 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Registering...' : 'Confirm Registration'}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle, 
   User, 
@@ -13,6 +14,7 @@ import {
 import apiClient from '../../api/client';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalAssets: 0,
     activeAllocations: 0,
